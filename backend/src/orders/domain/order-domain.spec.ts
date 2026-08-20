@@ -29,6 +29,21 @@ describe('Order domain policies', () => {
         SellerOrderStatus.PROCESSING,
       ),
     ).toBe(false);
+    expect(
+      canTransitionSellerOrder(
+        SellerOrderStatus.NEW,
+        SellerOrderStatus.SHIPPED,
+      ),
+    ).toBe(false);
+    expect(
+      canTransitionSellerOrder(SellerOrderStatus.NEW, SellerOrderStatus.NEW),
+    ).toBe(false);
+    expect(
+      canTransitionSellerOrder(
+        SellerOrderStatus.NEW,
+        SellerOrderStatus.CANCELLED,
+      ),
+    ).toBe(false);
   });
 
   it('derives parent status from independent SellerOrders', () => {

@@ -5,23 +5,11 @@ import {
 
 const SELLER_ORDER_TRANSITIONS: Record<SellerOrderStatus, SellerOrderStatus[]> =
   {
-    [SellerOrderStatus.NEW]: [
-      SellerOrderStatus.PROCESSING,
-      SellerOrderStatus.CANCELLED,
-      SellerOrderStatus.PARTIALLY_CANCELLED,
-    ],
-    [SellerOrderStatus.PROCESSING]: [
-      SellerOrderStatus.SHIPPED,
-      SellerOrderStatus.CANCELLED,
-      SellerOrderStatus.PARTIALLY_CANCELLED,
-    ],
+    [SellerOrderStatus.NEW]: [SellerOrderStatus.PROCESSING],
+    [SellerOrderStatus.PROCESSING]: [SellerOrderStatus.SHIPPED],
     [SellerOrderStatus.SHIPPED]: [SellerOrderStatus.COMPLETED],
     [SellerOrderStatus.COMPLETED]: [],
-    [SellerOrderStatus.PARTIALLY_CANCELLED]: [
-      SellerOrderStatus.PROCESSING,
-      SellerOrderStatus.SHIPPED,
-      SellerOrderStatus.CANCELLED,
-    ],
+    [SellerOrderStatus.PARTIALLY_CANCELLED]: [],
     [SellerOrderStatus.CANCELLED]: [],
   };
 
@@ -29,7 +17,7 @@ export function canTransitionSellerOrder(
   from: SellerOrderStatus,
   to: SellerOrderStatus,
 ): boolean {
-  return from === to || SELLER_ORDER_TRANSITIONS[from].includes(to);
+  return SELLER_ORDER_TRANSITIONS[from].includes(to);
 }
 
 export function deriveOrderStatus(statuses: SellerOrderStatus[]): OrderStatus {
@@ -39,7 +27,13 @@ export function deriveOrderStatus(statuses: SellerOrderStatus[]): OrderStatus {
   if (statuses.every((status) => status === SellerOrderStatus.CANCELLED)) {
     return OrderStatus.CANCELLED;
   }
-  if (statuses.some((status) => status === SellerOrderStatus.CANCELLED)) {
+  if (
+    statuses.some(
+      (status) =>
+        status === SellerOrderStatus.CANCELLED ||
+        status === SellerOrderStatus.PARTIALLY_CANCELLED,
+    )
+  ) {
     return OrderStatus.PARTIALLY_CANCELLED;
   }
   if (statuses.every((status) => status === SellerOrderStatus.COMPLETED)) {
