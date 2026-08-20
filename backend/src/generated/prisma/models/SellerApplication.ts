@@ -27,6 +27,7 @@ export type AggregateSellerApplication = {
 export type SellerApplicationMinAggregateOutputType = {
   id: string | null
   userId: string | null
+  displayName: string | null
   status: $Enums.SellerApplicationStatus | null
   reviewedById: string | null
   reviewedAt: Date | null
@@ -38,6 +39,7 @@ export type SellerApplicationMinAggregateOutputType = {
 export type SellerApplicationMaxAggregateOutputType = {
   id: string | null
   userId: string | null
+  displayName: string | null
   status: $Enums.SellerApplicationStatus | null
   reviewedById: string | null
   reviewedAt: Date | null
@@ -49,6 +51,7 @@ export type SellerApplicationMaxAggregateOutputType = {
 export type SellerApplicationCountAggregateOutputType = {
   id: number
   userId: number
+  displayName: number
   status: number
   reviewedById: number
   reviewedAt: number
@@ -62,6 +65,7 @@ export type SellerApplicationCountAggregateOutputType = {
 export type SellerApplicationMinAggregateInputType = {
   id?: true
   userId?: true
+  displayName?: true
   status?: true
   reviewedById?: true
   reviewedAt?: true
@@ -73,6 +77,7 @@ export type SellerApplicationMinAggregateInputType = {
 export type SellerApplicationMaxAggregateInputType = {
   id?: true
   userId?: true
+  displayName?: true
   status?: true
   reviewedById?: true
   reviewedAt?: true
@@ -84,6 +89,7 @@ export type SellerApplicationMaxAggregateInputType = {
 export type SellerApplicationCountAggregateInputType = {
   id?: true
   userId?: true
+  displayName?: true
   status?: true
   reviewedById?: true
   reviewedAt?: true
@@ -168,6 +174,7 @@ export type SellerApplicationGroupByArgs<ExtArgs extends runtime.Types.Extension
 export type SellerApplicationGroupByOutputType = {
   id: string
   userId: string
+  displayName: string
   status: $Enums.SellerApplicationStatus
   reviewedById: string | null
   reviewedAt: Date | null
@@ -200,6 +207,7 @@ export type SellerApplicationWhereInput = {
   NOT?: Prisma.SellerApplicationWhereInput | Prisma.SellerApplicationWhereInput[]
   id?: Prisma.UuidFilter<"SellerApplication"> | string
   userId?: Prisma.UuidFilter<"SellerApplication"> | string
+  displayName?: Prisma.StringFilter<"SellerApplication"> | string
   status?: Prisma.EnumSellerApplicationStatusFilter<"SellerApplication"> | $Enums.SellerApplicationStatus
   reviewedById?: Prisma.UuidNullableFilter<"SellerApplication"> | string | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"SellerApplication"> | Date | string | null
@@ -213,6 +221,7 @@ export type SellerApplicationWhereInput = {
 export type SellerApplicationOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  displayName?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -225,10 +234,11 @@ export type SellerApplicationOrderByWithRelationInput = {
 
 export type SellerApplicationWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  userId?: string
   AND?: Prisma.SellerApplicationWhereInput | Prisma.SellerApplicationWhereInput[]
   OR?: Prisma.SellerApplicationWhereInput[]
   NOT?: Prisma.SellerApplicationWhereInput | Prisma.SellerApplicationWhereInput[]
+  userId?: Prisma.UuidFilter<"SellerApplication"> | string
+  displayName?: Prisma.StringFilter<"SellerApplication"> | string
   status?: Prisma.EnumSellerApplicationStatusFilter<"SellerApplication"> | $Enums.SellerApplicationStatus
   reviewedById?: Prisma.UuidNullableFilter<"SellerApplication"> | string | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"SellerApplication"> | Date | string | null
@@ -237,11 +247,12 @@ export type SellerApplicationWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"SellerApplication"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   reviewedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
-}, "id" | "userId">
+}, "id">
 
 export type SellerApplicationOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  displayName?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -259,6 +270,7 @@ export type SellerApplicationScalarWhereWithAggregatesInput = {
   NOT?: Prisma.SellerApplicationScalarWhereWithAggregatesInput | Prisma.SellerApplicationScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"SellerApplication"> | string
   userId?: Prisma.UuidWithAggregatesFilter<"SellerApplication"> | string
+  displayName?: Prisma.StringWithAggregatesFilter<"SellerApplication"> | string
   status?: Prisma.EnumSellerApplicationStatusWithAggregatesFilter<"SellerApplication"> | $Enums.SellerApplicationStatus
   reviewedById?: Prisma.UuidNullableWithAggregatesFilter<"SellerApplication"> | string | null
   reviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"SellerApplication"> | Date | string | null
@@ -269,18 +281,20 @@ export type SellerApplicationScalarWhereWithAggregatesInput = {
 
 export type SellerApplicationCreateInput = {
   id?: string
+  displayName: string
   status?: $Enums.SellerApplicationStatus
   reviewedAt?: Date | string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutSellerApplicationInput
+  user: Prisma.UserCreateNestedOneWithoutSellerApplicationsInput
   reviewedBy?: Prisma.UserCreateNestedOneWithoutReviewedSellerApplicationsInput
 }
 
 export type SellerApplicationUncheckedCreateInput = {
   id?: string
   userId: string
+  displayName: string
   status?: $Enums.SellerApplicationStatus
   reviewedById?: string | null
   reviewedAt?: Date | string | null
@@ -291,18 +305,20 @@ export type SellerApplicationUncheckedCreateInput = {
 
 export type SellerApplicationUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutSellerApplicationNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutSellerApplicationsNestedInput
   reviewedBy?: Prisma.UserUpdateOneWithoutReviewedSellerApplicationsNestedInput
 }
 
 export type SellerApplicationUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -314,6 +330,7 @@ export type SellerApplicationUncheckedUpdateInput = {
 export type SellerApplicationCreateManyInput = {
   id?: string
   userId: string
+  displayName: string
   status?: $Enums.SellerApplicationStatus
   reviewedById?: string | null
   reviewedAt?: Date | string | null
@@ -324,6 +341,7 @@ export type SellerApplicationCreateManyInput = {
 
 export type SellerApplicationUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -334,17 +352,13 @@ export type SellerApplicationUpdateManyMutationInput = {
 export type SellerApplicationUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type SellerApplicationNullableScalarRelationFilter = {
-  is?: Prisma.SellerApplicationWhereInput | null
-  isNot?: Prisma.SellerApplicationWhereInput | null
 }
 
 export type SellerApplicationListRelationFilter = {
@@ -360,6 +374,7 @@ export type SellerApplicationOrderByRelationAggregateInput = {
 export type SellerApplicationCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  displayName?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
@@ -371,6 +386,7 @@ export type SellerApplicationCountOrderByAggregateInput = {
 export type SellerApplicationMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  displayName?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
@@ -382,6 +398,7 @@ export type SellerApplicationMaxOrderByAggregateInput = {
 export type SellerApplicationMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  displayName?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
@@ -390,10 +407,11 @@ export type SellerApplicationMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
-export type SellerApplicationCreateNestedOneWithoutUserInput = {
-  create?: Prisma.XOR<Prisma.SellerApplicationCreateWithoutUserInput, Prisma.SellerApplicationUncheckedCreateWithoutUserInput>
-  connectOrCreate?: Prisma.SellerApplicationCreateOrConnectWithoutUserInput
-  connect?: Prisma.SellerApplicationWhereUniqueInput
+export type SellerApplicationCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.SellerApplicationCreateWithoutUserInput, Prisma.SellerApplicationUncheckedCreateWithoutUserInput> | Prisma.SellerApplicationCreateWithoutUserInput[] | Prisma.SellerApplicationUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.SellerApplicationCreateOrConnectWithoutUserInput | Prisma.SellerApplicationCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.SellerApplicationCreateManyUserInputEnvelope
+  connect?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
 }
 
 export type SellerApplicationCreateNestedManyWithoutReviewedByInput = {
@@ -403,10 +421,11 @@ export type SellerApplicationCreateNestedManyWithoutReviewedByInput = {
   connect?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
 }
 
-export type SellerApplicationUncheckedCreateNestedOneWithoutUserInput = {
-  create?: Prisma.XOR<Prisma.SellerApplicationCreateWithoutUserInput, Prisma.SellerApplicationUncheckedCreateWithoutUserInput>
-  connectOrCreate?: Prisma.SellerApplicationCreateOrConnectWithoutUserInput
-  connect?: Prisma.SellerApplicationWhereUniqueInput
+export type SellerApplicationUncheckedCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.SellerApplicationCreateWithoutUserInput, Prisma.SellerApplicationUncheckedCreateWithoutUserInput> | Prisma.SellerApplicationCreateWithoutUserInput[] | Prisma.SellerApplicationUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.SellerApplicationCreateOrConnectWithoutUserInput | Prisma.SellerApplicationCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.SellerApplicationCreateManyUserInputEnvelope
+  connect?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
 }
 
 export type SellerApplicationUncheckedCreateNestedManyWithoutReviewedByInput = {
@@ -416,14 +435,18 @@ export type SellerApplicationUncheckedCreateNestedManyWithoutReviewedByInput = {
   connect?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
 }
 
-export type SellerApplicationUpdateOneWithoutUserNestedInput = {
-  create?: Prisma.XOR<Prisma.SellerApplicationCreateWithoutUserInput, Prisma.SellerApplicationUncheckedCreateWithoutUserInput>
-  connectOrCreate?: Prisma.SellerApplicationCreateOrConnectWithoutUserInput
-  upsert?: Prisma.SellerApplicationUpsertWithoutUserInput
-  disconnect?: Prisma.SellerApplicationWhereInput | boolean
-  delete?: Prisma.SellerApplicationWhereInput | boolean
-  connect?: Prisma.SellerApplicationWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.SellerApplicationUpdateToOneWithWhereWithoutUserInput, Prisma.SellerApplicationUpdateWithoutUserInput>, Prisma.SellerApplicationUncheckedUpdateWithoutUserInput>
+export type SellerApplicationUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.SellerApplicationCreateWithoutUserInput, Prisma.SellerApplicationUncheckedCreateWithoutUserInput> | Prisma.SellerApplicationCreateWithoutUserInput[] | Prisma.SellerApplicationUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.SellerApplicationCreateOrConnectWithoutUserInput | Prisma.SellerApplicationCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.SellerApplicationUpsertWithWhereUniqueWithoutUserInput | Prisma.SellerApplicationUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.SellerApplicationCreateManyUserInputEnvelope
+  set?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
+  disconnect?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
+  delete?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
+  connect?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
+  update?: Prisma.SellerApplicationUpdateWithWhereUniqueWithoutUserInput | Prisma.SellerApplicationUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.SellerApplicationUpdateManyWithWhereWithoutUserInput | Prisma.SellerApplicationUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.SellerApplicationScalarWhereInput | Prisma.SellerApplicationScalarWhereInput[]
 }
 
 export type SellerApplicationUpdateManyWithoutReviewedByNestedInput = {
@@ -440,14 +463,18 @@ export type SellerApplicationUpdateManyWithoutReviewedByNestedInput = {
   deleteMany?: Prisma.SellerApplicationScalarWhereInput | Prisma.SellerApplicationScalarWhereInput[]
 }
 
-export type SellerApplicationUncheckedUpdateOneWithoutUserNestedInput = {
-  create?: Prisma.XOR<Prisma.SellerApplicationCreateWithoutUserInput, Prisma.SellerApplicationUncheckedCreateWithoutUserInput>
-  connectOrCreate?: Prisma.SellerApplicationCreateOrConnectWithoutUserInput
-  upsert?: Prisma.SellerApplicationUpsertWithoutUserInput
-  disconnect?: Prisma.SellerApplicationWhereInput | boolean
-  delete?: Prisma.SellerApplicationWhereInput | boolean
-  connect?: Prisma.SellerApplicationWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.SellerApplicationUpdateToOneWithWhereWithoutUserInput, Prisma.SellerApplicationUpdateWithoutUserInput>, Prisma.SellerApplicationUncheckedUpdateWithoutUserInput>
+export type SellerApplicationUncheckedUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.SellerApplicationCreateWithoutUserInput, Prisma.SellerApplicationUncheckedCreateWithoutUserInput> | Prisma.SellerApplicationCreateWithoutUserInput[] | Prisma.SellerApplicationUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.SellerApplicationCreateOrConnectWithoutUserInput | Prisma.SellerApplicationCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.SellerApplicationUpsertWithWhereUniqueWithoutUserInput | Prisma.SellerApplicationUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.SellerApplicationCreateManyUserInputEnvelope
+  set?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
+  disconnect?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
+  delete?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
+  connect?: Prisma.SellerApplicationWhereUniqueInput | Prisma.SellerApplicationWhereUniqueInput[]
+  update?: Prisma.SellerApplicationUpdateWithWhereUniqueWithoutUserInput | Prisma.SellerApplicationUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.SellerApplicationUpdateManyWithWhereWithoutUserInput | Prisma.SellerApplicationUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.SellerApplicationScalarWhereInput | Prisma.SellerApplicationScalarWhereInput[]
 }
 
 export type SellerApplicationUncheckedUpdateManyWithoutReviewedByNestedInput = {
@@ -470,6 +497,7 @@ export type EnumSellerApplicationStatusFieldUpdateOperationsInput = {
 
 export type SellerApplicationCreateWithoutUserInput = {
   id?: string
+  displayName: string
   status?: $Enums.SellerApplicationStatus
   reviewedAt?: Date | string | null
   rejectionReason?: string | null
@@ -480,6 +508,7 @@ export type SellerApplicationCreateWithoutUserInput = {
 
 export type SellerApplicationUncheckedCreateWithoutUserInput = {
   id?: string
+  displayName: string
   status?: $Enums.SellerApplicationStatus
   reviewedById?: string | null
   reviewedAt?: Date | string | null
@@ -493,19 +522,26 @@ export type SellerApplicationCreateOrConnectWithoutUserInput = {
   create: Prisma.XOR<Prisma.SellerApplicationCreateWithoutUserInput, Prisma.SellerApplicationUncheckedCreateWithoutUserInput>
 }
 
+export type SellerApplicationCreateManyUserInputEnvelope = {
+  data: Prisma.SellerApplicationCreateManyUserInput | Prisma.SellerApplicationCreateManyUserInput[]
+  skipDuplicates?: boolean
+}
+
 export type SellerApplicationCreateWithoutReviewedByInput = {
   id?: string
+  displayName: string
   status?: $Enums.SellerApplicationStatus
   reviewedAt?: Date | string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutSellerApplicationInput
+  user: Prisma.UserCreateNestedOneWithoutSellerApplicationsInput
 }
 
 export type SellerApplicationUncheckedCreateWithoutReviewedByInput = {
   id?: string
   userId: string
+  displayName: string
   status?: $Enums.SellerApplicationStatus
   reviewedAt?: Date | string | null
   rejectionReason?: string | null
@@ -523,35 +559,35 @@ export type SellerApplicationCreateManyReviewedByInputEnvelope = {
   skipDuplicates?: boolean
 }
 
-export type SellerApplicationUpsertWithoutUserInput = {
+export type SellerApplicationUpsertWithWhereUniqueWithoutUserInput = {
+  where: Prisma.SellerApplicationWhereUniqueInput
   update: Prisma.XOR<Prisma.SellerApplicationUpdateWithoutUserInput, Prisma.SellerApplicationUncheckedUpdateWithoutUserInput>
   create: Prisma.XOR<Prisma.SellerApplicationCreateWithoutUserInput, Prisma.SellerApplicationUncheckedCreateWithoutUserInput>
-  where?: Prisma.SellerApplicationWhereInput
 }
 
-export type SellerApplicationUpdateToOneWithWhereWithoutUserInput = {
-  where?: Prisma.SellerApplicationWhereInput
+export type SellerApplicationUpdateWithWhereUniqueWithoutUserInput = {
+  where: Prisma.SellerApplicationWhereUniqueInput
   data: Prisma.XOR<Prisma.SellerApplicationUpdateWithoutUserInput, Prisma.SellerApplicationUncheckedUpdateWithoutUserInput>
 }
 
-export type SellerApplicationUpdateWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
-  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  reviewedBy?: Prisma.UserUpdateOneWithoutReviewedSellerApplicationsNestedInput
+export type SellerApplicationUpdateManyWithWhereWithoutUserInput = {
+  where: Prisma.SellerApplicationScalarWhereInput
+  data: Prisma.XOR<Prisma.SellerApplicationUpdateManyMutationInput, Prisma.SellerApplicationUncheckedUpdateManyWithoutUserInput>
 }
 
-export type SellerApplicationUncheckedUpdateWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
-  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type SellerApplicationScalarWhereInput = {
+  AND?: Prisma.SellerApplicationScalarWhereInput | Prisma.SellerApplicationScalarWhereInput[]
+  OR?: Prisma.SellerApplicationScalarWhereInput[]
+  NOT?: Prisma.SellerApplicationScalarWhereInput | Prisma.SellerApplicationScalarWhereInput[]
+  id?: Prisma.UuidFilter<"SellerApplication"> | string
+  userId?: Prisma.UuidFilter<"SellerApplication"> | string
+  displayName?: Prisma.StringFilter<"SellerApplication"> | string
+  status?: Prisma.EnumSellerApplicationStatusFilter<"SellerApplication"> | $Enums.SellerApplicationStatus
+  reviewedById?: Prisma.UuidNullableFilter<"SellerApplication"> | string | null
+  reviewedAt?: Prisma.DateTimeNullableFilter<"SellerApplication"> | Date | string | null
+  rejectionReason?: Prisma.StringNullableFilter<"SellerApplication"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"SellerApplication"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"SellerApplication"> | Date | string
 }
 
 export type SellerApplicationUpsertWithWhereUniqueWithoutReviewedByInput = {
@@ -570,23 +606,21 @@ export type SellerApplicationUpdateManyWithWhereWithoutReviewedByInput = {
   data: Prisma.XOR<Prisma.SellerApplicationUpdateManyMutationInput, Prisma.SellerApplicationUncheckedUpdateManyWithoutReviewedByInput>
 }
 
-export type SellerApplicationScalarWhereInput = {
-  AND?: Prisma.SellerApplicationScalarWhereInput | Prisma.SellerApplicationScalarWhereInput[]
-  OR?: Prisma.SellerApplicationScalarWhereInput[]
-  NOT?: Prisma.SellerApplicationScalarWhereInput | Prisma.SellerApplicationScalarWhereInput[]
-  id?: Prisma.UuidFilter<"SellerApplication"> | string
-  userId?: Prisma.UuidFilter<"SellerApplication"> | string
-  status?: Prisma.EnumSellerApplicationStatusFilter<"SellerApplication"> | $Enums.SellerApplicationStatus
-  reviewedById?: Prisma.UuidNullableFilter<"SellerApplication"> | string | null
-  reviewedAt?: Prisma.DateTimeNullableFilter<"SellerApplication"> | Date | string | null
-  rejectionReason?: Prisma.StringNullableFilter<"SellerApplication"> | string | null
-  createdAt?: Prisma.DateTimeFilter<"SellerApplication"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"SellerApplication"> | Date | string
+export type SellerApplicationCreateManyUserInput = {
+  id?: string
+  displayName: string
+  status?: $Enums.SellerApplicationStatus
+  reviewedById?: string | null
+  reviewedAt?: Date | string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type SellerApplicationCreateManyReviewedByInput = {
   id?: string
   userId: string
+  displayName: string
   status?: $Enums.SellerApplicationStatus
   reviewedAt?: Date | string | null
   rejectionReason?: string | null
@@ -594,19 +628,54 @@ export type SellerApplicationCreateManyReviewedByInput = {
   updatedAt?: Date | string
 }
 
-export type SellerApplicationUpdateWithoutReviewedByInput = {
+export type SellerApplicationUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutSellerApplicationNestedInput
+  reviewedBy?: Prisma.UserUpdateOneWithoutReviewedSellerApplicationsNestedInput
+}
+
+export type SellerApplicationUncheckedUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type SellerApplicationUncheckedUpdateManyWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type SellerApplicationUpdateWithoutReviewedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutSellerApplicationsNestedInput
 }
 
 export type SellerApplicationUncheckedUpdateWithoutReviewedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -617,6 +686,7 @@ export type SellerApplicationUncheckedUpdateWithoutReviewedByInput = {
 export type SellerApplicationUncheckedUpdateManyWithoutReviewedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumSellerApplicationStatusFieldUpdateOperationsInput | $Enums.SellerApplicationStatus
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -629,6 +699,7 @@ export type SellerApplicationUncheckedUpdateManyWithoutReviewedByInput = {
 export type SellerApplicationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  displayName?: boolean
   status?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
@@ -642,6 +713,7 @@ export type SellerApplicationSelect<ExtArgs extends runtime.Types.Extensions.Int
 export type SellerApplicationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  displayName?: boolean
   status?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
@@ -655,6 +727,7 @@ export type SellerApplicationSelectCreateManyAndReturn<ExtArgs extends runtime.T
 export type SellerApplicationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  displayName?: boolean
   status?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
@@ -668,6 +741,7 @@ export type SellerApplicationSelectUpdateManyAndReturn<ExtArgs extends runtime.T
 export type SellerApplicationSelectScalar = {
   id?: boolean
   userId?: boolean
+  displayName?: boolean
   status?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
@@ -676,7 +750,7 @@ export type SellerApplicationSelectScalar = {
   updatedAt?: boolean
 }
 
-export type SellerApplicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "reviewedById" | "reviewedAt" | "rejectionReason" | "createdAt" | "updatedAt", ExtArgs["result"]["sellerApplication"]>
+export type SellerApplicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "displayName" | "status" | "reviewedById" | "reviewedAt" | "rejectionReason" | "createdAt" | "updatedAt", ExtArgs["result"]["sellerApplication"]>
 export type SellerApplicationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   reviewedBy?: boolean | Prisma.SellerApplication$reviewedByArgs<ExtArgs>
@@ -699,6 +773,7 @@ export type $SellerApplicationPayload<ExtArgs extends runtime.Types.Extensions.I
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     userId: string
+    displayName: string
     status: $Enums.SellerApplicationStatus
     reviewedById: string | null
     reviewedAt: Date | null
@@ -1132,6 +1207,7 @@ export interface Prisma__SellerApplicationClient<T, Null = never, ExtArgs extend
 export interface SellerApplicationFieldRefs {
   readonly id: Prisma.FieldRef<"SellerApplication", 'String'>
   readonly userId: Prisma.FieldRef<"SellerApplication", 'String'>
+  readonly displayName: Prisma.FieldRef<"SellerApplication", 'String'>
   readonly status: Prisma.FieldRef<"SellerApplication", 'SellerApplicationStatus'>
   readonly reviewedById: Prisma.FieldRef<"SellerApplication", 'String'>
   readonly reviewedAt: Prisma.FieldRef<"SellerApplication", 'DateTime'>

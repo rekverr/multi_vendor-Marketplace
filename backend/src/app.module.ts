@@ -11,6 +11,7 @@ import { envValidationSchema } from './config/env.validation.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
 import { MetricsModule } from './metrics/metrics.module.js';
+import { SellersModule } from './sellers/sellers.module.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MetricsModule } from './metrics/metrics.module.js';
 
     DatabaseModule,
     AuthModule,
+    SellersModule,
     HealthModule,
     MetricsModule,
   ],

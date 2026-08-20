@@ -7,6 +7,7 @@ import { GoogleOAuthClient } from './google-oauth.client.js';
 import { GoogleOAuthStateService } from './google-oauth-state.service.js';
 import { JwtAccessGuard } from './jwt-access.guard.js';
 import { PasswordHasherService } from './password-hasher.service.js';
+import { RolesGuard } from './roles.guard.js';
 
 @Module({
   imports: [JwtModule.register({})],
@@ -17,7 +18,8 @@ import { PasswordHasherService } from './password-hasher.service.js';
     GoogleOAuthStateService,
     JwtAccessGuard,
     PasswordHasherService,
+    RolesGuard,
   ],
-  exports: [JwtAccessGuard],
+  exports: [JwtModule, JwtAccessGuard, RolesGuard],
 })
 export class AuthModule {}

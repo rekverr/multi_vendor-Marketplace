@@ -49,7 +49,7 @@ model User {
   updatedAt                  DateTime            @updatedAt
   refreshSessions            RefreshSession[]
   oauthAccounts              OAuthAccount[]
-  sellerApplication          SellerApplication?  @relation("Applicant")
+  sellerApplications         SellerApplication[] @relation("Applicant")
   reviewedSellerApplications SellerApplication[] @relation("ApplicationReviewer")
   sellerProfile              SellerProfile?
   moderatedProducts          Product[]           @relation("ProductModerator")
@@ -85,7 +85,8 @@ model RefreshSession {
 
 model SellerApplication {
   id              String                  @id @default(uuid()) @db.Uuid
-  userId          String                  @unique @db.Uuid
+  userId          String                  @db.Uuid
+  displayName     String
   status          SellerApplicationStatus @default(PENDING)
   reviewedById    String?                 @db.Uuid
   reviewedAt      DateTime?
@@ -96,6 +97,7 @@ model SellerApplication {
   reviewedBy      User?                   @relation("ApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
+  @@index([userId, status])
 }
 
 model SellerProfile {

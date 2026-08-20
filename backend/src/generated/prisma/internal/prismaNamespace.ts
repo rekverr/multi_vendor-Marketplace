@@ -1020,6 +1020,7 @@ export type RefreshSessionScalarFieldEnum = (typeof RefreshSessionScalarFieldEnu
 export const SellerApplicationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  displayName: 'displayName',
   status: 'status',
   reviewedById: 'reviewedById',
   reviewedAt: 'reviewedAt',
