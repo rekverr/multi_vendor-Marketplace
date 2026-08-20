@@ -2,10 +2,16 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { Prisma, ProductStatus } from '../generated/prisma/client.js';
 import { PrismaService } from '../database/prisma.service.js';
-import { PublicProductQueryDto } from './dto/public-product-query.dto.js';
+import { CatalogCacheService } from '../cache/catalog-cache.service.js';
+import { MeilisearchService } from '../search/meilisearch.service.js';
+import {
+  ProductSearchSort,
+  PublicProductQueryDto,
+} from './dto/public-product-query.dto.js';
 
 const publicProductSelect = {
   id: true,
@@ -34,7 +40,11 @@ const publicProductSelect = {
 
 @Injectable()
 export class PublicProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly search: MeilisearchService,
+    private readonly cache: CatalogCacheService,
+  ) {}
 
   async list(query: PublicProductQueryDto) {
     const minPrice = query.minPrice
@@ -48,54 +58,75 @@ export class PublicProductsService {
       throw new BadRequestException('minPrice must not exceed maxPrice');
     }
 
-    const where: Prisma.ProductWhereInput = {
-      status: ProductStatus.PUBLISHED,
-      ...(query.categoryId ? { categoryId: query.categoryId } : {}),
-      ...(query.sellerId ? { sellerId: query.sellerId } : {}),
-      ...(minPrice || maxPrice
-        ? {
-            price: {
-              ...(minPrice ? { gte: minPrice } : {}),
-              ...(maxPrice ? { lte: maxPrice } : {}),
-            },
-          }
-        : {}),
-      ...(query.available === true ? { stock: { gt: 0 } } : {}),
-      ...(query.available === false ? { stock: 0 } : {}),
-    };
+    const filters = [
+      query.categoryId ? `categoryId = "${query.categoryId}"` : undefined,
+      query.sellerId ? `sellerId = "${query.sellerId}"` : undefined,
+      minPrice ? `price >= ${minPrice.toString()}` : undefined,
+      maxPrice ? `price <= ${maxPrice.toString()}` : undefined,
+      query.available === undefined
+        ? undefined
+        : `inStock = ${query.available}`,
+    ].filter((value): value is string => Boolean(value));
 
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.product.findMany({
-        where,
+    const sort = {
+      [ProductSearchSort.NEWEST]: ['publishedAt:desc', 'id:asc'],
+      [ProductSearchSort.PRICE_ASC]: ['price:asc', 'id:asc'],
+      [ProductSearchSort.PRICE_DESC]: ['price:desc', 'id:asc'],
+    }[query.sort];
+
+    try {
+      const result = await this.search.searchProducts(query.q ?? '', {
+        filter: filters,
+        sort,
+        offset: (query.page - 1) * query.pageSize,
+        limit: query.pageSize,
+        facets: ['categoryId', 'sellerId', 'type', 'inStock'],
+      });
+      const total = result.estimatedTotalHits ?? result.hits.length;
+      const ids = result.hits.map((hit) => hit.id);
+      const products = await this.prisma.product.findMany({
+        where: { id: { in: ids }, status: ProductStatus.PUBLISHED },
         select: publicProductSelect,
-        orderBy: [{ publishedAt: 'desc' }, { id: 'asc' }],
-        skip: (query.page - 1) * query.pageSize,
-        take: query.pageSize,
-      }),
-      this.prisma.product.count({ where }),
-    ]);
-
-    return {
-      items,
-      pagination: {
-        page: query.page,
-        pageSize: query.pageSize,
-        total,
-        totalPages: Math.ceil(total / query.pageSize),
-      },
-    };
+      });
+      const productsById = new Map(
+        products.map((product) => [product.id, product]),
+      );
+      return {
+        items: ids.flatMap((id) => {
+          const product = productsById.get(id);
+          return product ? [product] : [];
+        }),
+        facets: result.facetDistribution ?? {},
+        pagination: {
+          page: query.page,
+          pageSize: query.pageSize,
+          total,
+          totalPages: Math.ceil(total / query.pageSize),
+        },
+      };
+    } catch {
+      throw new ServiceUnavailableException({
+        message: 'Product search is temporarily unavailable',
+        degraded: true,
+      });
+    }
   }
 
   async getById(id: string) {
+    const cached = await this.cache.getProduct<unknown>(id);
+    if (cached) return cached;
+
     const product = await this.prisma.product.findFirst({
       where: { id, status: ProductStatus.PUBLISHED },
       select: publicProductSelect,
     });
 
     if (!product) {
+      await this.cache.invalidateProduct(id);
       throw new NotFoundException('Product not found');
     }
 
+    await this.cache.setProduct(id, product);
     return product;
   }
 }

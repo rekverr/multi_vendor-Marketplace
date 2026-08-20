@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Redis } from 'ioredis';
+import { Redis, RedisOptions } from 'ioredis';
 
 @Injectable()
 export class RedisConnectionService {
@@ -10,10 +10,11 @@ export class RedisConnectionService {
     this.redisUrl = config.getOrThrow<string>('REDIS_URL');
   }
 
-  createClient(): Redis {
+  createClient(options: RedisOptions = {}): Redis {
     return new Redis(this.redisUrl, {
       maxRetriesPerRequest: null,
       enableReadyCheck: true,
+      ...options,
     });
   }
 }

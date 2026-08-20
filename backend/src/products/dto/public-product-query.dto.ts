@@ -1,6 +1,7 @@
 import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -13,7 +14,18 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 const MONEY_PATTERN = /^\d{1,17}(?:\.\d{1,2})?$/;
 
+export enum ProductSearchSort {
+  NEWEST = 'newest',
+  PRICE_ASC = 'price_asc',
+  PRICE_DESC = 'price_desc',
+}
+
 export class PublicProductQueryDto {
+  @ApiPropertyOptional({ description: 'Full-text Product search' })
+  @IsOptional()
+  @IsString()
+  q?: string;
+
   @ApiPropertyOptional({ default: 1, minimum: 1 })
   @Type(() => Number)
   @IsInt()
@@ -58,4 +70,12 @@ export class PublicProductQueryDto {
   })
   @IsBoolean()
   available?: boolean;
+
+  @ApiPropertyOptional({
+    enum: ProductSearchSort,
+    default: ProductSearchSort.NEWEST,
+  })
+  @IsOptional()
+  @IsEnum(ProductSearchSort)
+  sort: ProductSearchSort = ProductSearchSort.NEWEST;
 }

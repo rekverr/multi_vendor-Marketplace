@@ -12,9 +12,17 @@ import {
   UserRole,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../database/prisma.service.js';
+import { CatalogCacheService } from '../cache/catalog-cache.service.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
+import {
+  PRODUCT_ARCHIVED,
+  PRODUCT_CREATED,
+  PRODUCT_UNPUBLISHED,
+  PRODUCT_UPDATED,
+  ProductEventsService,
+} from '../search/product-events.service.js';
 
 const productInclude = {
   category: true,
@@ -22,27 +30,47 @@ const productInclude = {
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly events: ProductEventsService,
+    private readonly cache: CatalogCacheService,
+  ) {}
 
-  async create(user: AuthenticatedUser, dto: CreateProductDto) {
+  async create(
+    user: AuthenticatedUser,
+    dto: CreateProductDto,
+    correlationId: string,
+  ) {
     const seller = await this.getApprovedSeller(user.id);
     await this.assertCategory(dto.categoryId);
 
     try {
-      return await this.prisma.product.create({
-        data: {
-          sellerId: seller.id,
-          categoryId: dto.categoryId,
-          title: dto.title,
-          description: dto.description,
-          imageUrl: dto.imageUrl,
-          type: ProductType.FIXED_PRICE,
-          price: new Prisma.Decimal(dto.price),
-          stock: dto.stock,
-          status: ProductStatus.DRAFT,
-        },
-        include: productInclude,
+      const product = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.product.create({
+          data: {
+            sellerId: seller.id,
+            categoryId: dto.categoryId,
+            title: dto.title,
+            description: dto.description,
+            imageUrl: dto.imageUrl,
+            type: ProductType.FIXED_PRICE,
+            price: new Prisma.Decimal(dto.price),
+            stock: dto.stock,
+            status: ProductStatus.DRAFT,
+          },
+          include: productInclude,
+        });
+        await this.events.emit(
+          tx,
+          PRODUCT_CREATED,
+          created.id,
+          correlationId,
+          created.updatedAt,
+        );
+        return created;
       });
+      await this.cache.invalidateProduct(product.id);
+      return product;
     } catch (error) {
       this.handleCategoryReference(error);
     }
@@ -63,7 +91,12 @@ export class ProductsService {
     return this.getOwnedProduct(id, seller.id);
   }
 
-  async update(user: AuthenticatedUser, id: string, dto: UpdateProductDto) {
+  async update(
+    user: AuthenticatedUser,
+    id: string,
+    dto: UpdateProductDto,
+    correlationId: string,
+  ) {
     const seller = await this.getApprovedSeller(user.id);
     const product = await this.getOwnedProduct(id, seller.id);
 
@@ -81,35 +114,53 @@ export class ProductsService {
     }
 
     try {
-      return await this.prisma.product.update({
-        where: { id: product.id },
-        data: {
-          categoryId: dto.categoryId,
-          title: dto.title,
-          description: dto.description,
-          imageUrl: dto.imageUrl,
-          price:
-            dto.price === undefined ? undefined : new Prisma.Decimal(dto.price),
-          stock: dto.stock,
-          status:
-            product.status === ProductStatus.REJECTED
-              ? ProductStatus.DRAFT
-              : undefined,
-          moderatedById:
-            product.status === ProductStatus.REJECTED ? null : undefined,
-          moderatedAt:
-            product.status === ProductStatus.REJECTED ? null : undefined,
-          rejectionReason:
-            product.status === ProductStatus.REJECTED ? null : undefined,
-        },
-        include: productInclude,
+      const updated = await this.prisma.$transaction(async (tx) => {
+        const result = await tx.product.update({
+          where: { id: product.id },
+          data: {
+            categoryId: dto.categoryId,
+            title: dto.title,
+            description: dto.description,
+            imageUrl: dto.imageUrl,
+            price:
+              dto.price === undefined
+                ? undefined
+                : new Prisma.Decimal(dto.price),
+            stock: dto.stock,
+            status:
+              product.status === ProductStatus.REJECTED
+                ? ProductStatus.DRAFT
+                : undefined,
+            moderatedById:
+              product.status === ProductStatus.REJECTED ? null : undefined,
+            moderatedAt:
+              product.status === ProductStatus.REJECTED ? null : undefined,
+            rejectionReason:
+              product.status === ProductStatus.REJECTED ? null : undefined,
+          },
+          include: productInclude,
+        });
+        await this.events.emit(
+          tx,
+          PRODUCT_UPDATED,
+          result.id,
+          correlationId,
+          result.updatedAt,
+        );
+        return result;
       });
+      await this.cache.invalidateProduct(updated.id);
+      return updated;
     } catch (error) {
       this.handleCategoryReference(error);
     }
   }
 
-  async requestPublication(user: AuthenticatedUser, id: string) {
+  async requestPublication(
+    user: AuthenticatedUser,
+    id: string,
+    correlationId: string,
+  ) {
     const seller = await this.getApprovedSeller(user.id);
     const product = await this.getOwnedProduct(id, seller.id);
 
@@ -122,28 +173,40 @@ export class ProductsService {
       );
     }
 
-    const transitioned = await this.prisma.product.updateMany({
-      where: {
-        id: product.id,
-        sellerId: seller.id,
-        status: { in: [ProductStatus.DRAFT, ProductStatus.REJECTED] },
-      },
-      data: {
-        status: ProductStatus.PENDING_REVIEW,
-        moderatedById: null,
-        moderatedAt: null,
-        rejectionReason: null,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      const transitioned = await tx.product.updateMany({
+        where: {
+          id: product.id,
+          sellerId: seller.id,
+          status: { in: [ProductStatus.DRAFT, ProductStatus.REJECTED] },
+        },
+        data: {
+          status: ProductStatus.PENDING_REVIEW,
+          moderatedById: null,
+          moderatedAt: null,
+          rejectionReason: null,
+        },
+      });
+
+      if (transitioned.count !== 1) {
+        throw new ConflictException('Product state changed concurrently');
+      }
+      const updated = await tx.product.findUniqueOrThrow({
+        where: { id: product.id },
+      });
+      await this.events.emit(
+        tx,
+        PRODUCT_UNPUBLISHED,
+        updated.id,
+        correlationId,
+        updated.updatedAt,
+      );
     });
-
-    if (transitioned.count !== 1) {
-      throw new ConflictException('Product state changed concurrently');
-    }
-
+    await this.cache.invalidateProduct(product.id);
     return this.getOwnedProduct(product.id, seller.id);
   }
 
-  async archive(user: AuthenticatedUser, id: string) {
+  async archive(user: AuthenticatedUser, id: string, correlationId: string) {
     const seller = await this.getApprovedSeller(user.id);
     const product = await this.getOwnedProduct(id, seller.id);
 
@@ -151,11 +214,20 @@ export class ProductsService {
       return product;
     }
 
-    await this.prisma.product.updateMany({
-      where: { id: product.id, sellerId: seller.id },
-      data: { status: ProductStatus.ARCHIVED },
+    await this.prisma.$transaction(async (tx) => {
+      const archived = await tx.product.update({
+        where: { id: product.id },
+        data: { status: ProductStatus.ARCHIVED },
+      });
+      await this.events.emit(
+        tx,
+        PRODUCT_ARCHIVED,
+        archived.id,
+        correlationId,
+        archived.updatedAt,
+      );
     });
-
+    await this.cache.invalidateProduct(product.id);
     return this.getOwnedProduct(product.id, seller.id);
   }
 

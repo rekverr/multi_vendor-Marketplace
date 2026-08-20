@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { AuthModule } from './auth/auth.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
+import { CacheModule } from './cache/cache.module.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
 import { envValidationSchema } from './config/env.validation.js';
 import { DatabaseModule } from './database/database.module.js';
@@ -11,6 +12,7 @@ import { MetricsModule } from './metrics/metrics.module.js';
 import { OutboxModule } from './outbox/outbox.module.js';
 import { ProductsModule } from './products/products.module.js';
 import { SellersModule } from './sellers/sellers.module.js';
+import { SearchModule } from './search/search.module.js';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { SellersModule } from './sellers/sellers.module.js';
     }),
 
     DatabaseModule,
+    CacheModule,
     AuthModule,
     CategoriesModule,
     ProductsModule,
@@ -31,6 +34,7 @@ import { SellersModule } from './sellers/sellers.module.js';
     HealthModule,
     MetricsModule,
     OutboxModule,
+    SearchModule,
   ],
 })
 export class AppModule implements NestModule {

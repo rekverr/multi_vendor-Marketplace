@@ -12,6 +12,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '../auth/current-user.decorator.js';
+import { CorrelationId } from '../common/correlation-id.decorator.js';
 import { JwtAccessGuard } from '../auth/jwt-access.guard.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
@@ -34,8 +35,9 @@ export class ProductsController {
   create(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateProductDto,
+    @CorrelationId() correlationId: string,
   ) {
-    return this.productsService.create(user, dto);
+    return this.productsService.create(user, dto, correlationId);
   }
 
   @Get()
@@ -59,8 +61,9 @@ export class ProductsController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateProductDto,
+    @CorrelationId() correlationId: string,
   ) {
-    return this.productsService.update(user, id, dto);
+    return this.productsService.update(user, id, dto, correlationId);
   }
 
   @Patch(':id/request-publication')
@@ -68,8 +71,9 @@ export class ProductsController {
   requestPublication(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', new ParseUUIDPipe()) id: string,
+    @CorrelationId() correlationId: string,
   ) {
-    return this.productsService.requestPublication(user, id);
+    return this.productsService.requestPublication(user, id, correlationId);
   }
 
   @Delete(':id')
@@ -77,7 +81,8 @@ export class ProductsController {
   archive(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', new ParseUUIDPipe()) id: string,
+    @CorrelationId() correlationId: string,
   ) {
-    return this.productsService.archive(user, id);
+    return this.productsService.archive(user, id, correlationId);
   }
 }

@@ -6,33 +6,50 @@ import {
 
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../database/prisma.service.js';
+import { CatalogCacheService } from '../cache/catalog-cache.service.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
 
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CatalogCacheService,
+  ) {}
 
   async create(dto: CreateCategoryDto) {
     try {
-      return await this.prisma.category.create({ data: { name: dto.name } });
+      const category = await this.prisma.category.create({
+        data: { name: dto.name },
+      });
+      await this.cache.invalidateCategories();
+      return category;
     } catch (error) {
       this.handleUniqueName(error);
     }
   }
 
-  list() {
-    return this.prisma.category.findMany({ orderBy: { name: 'asc' } });
+  async list() {
+    const cached = await this.cache.getCategories<unknown[]>();
+    if (cached) return cached;
+
+    const categories = await this.prisma.category.findMany({
+      orderBy: { name: 'asc' },
+    });
+    await this.cache.setCategories(categories);
+    return categories;
   }
 
   async update(id: string, dto: UpdateCategoryDto) {
     await this.assertExists(id);
 
     try {
-      return await this.prisma.category.update({
+      const category = await this.prisma.category.update({
         where: { id },
         data: dto,
       });
+      await this.cache.invalidateCategories();
+      return category;
     } catch (error) {
       this.handleUniqueName(error);
     }
@@ -41,6 +58,7 @@ export class CategoriesService {
   async remove(id: string): Promise<void> {
     try {
       await this.prisma.category.delete({ where: { id } });
+      await this.cache.invalidateCategories();
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&

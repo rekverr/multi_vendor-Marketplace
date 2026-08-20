@@ -18,7 +18,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json"
+    "test:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.json",
+    "search:reindex": "node dist/src/search/reindex.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -36,6 +37,7 @@
     "google-auth-library": "^11.0.2",
     "ioredis": "^6.0.0",
     "joi": "^18.2.5",
+    "meilisearch": "^0.60.0",
     "pg": "^8.23.0",
     "prisma": "^7.9.1",
     "prom-client": "^15.1.3",

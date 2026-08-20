@@ -11,12 +11,14 @@ import {
   ProductType,
   UserRole,
 } from '../src/generated/prisma/client.js';
+import { ProductReindexService } from '../src/search/product-reindex.service.js';
 
 const TEST_PREFIX = `public-products-${process.pid}`;
 
 describe('Public Product catalog (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
+  let reindex: ProductReindexService;
   let categoryAId: string;
   let categoryBId: string;
   let sellerAId: string;
@@ -33,11 +35,13 @@ describe('Public Product catalog (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
+    reindex = app.get(ProductReindexService);
   });
 
   beforeEach(async () => {
     await cleanup();
     await seedCatalog();
+    await reindex.rebuild();
   });
 
   it('returns only published Products and exposes only public fields', async () => {
@@ -101,6 +105,30 @@ describe('Public Product catalog (e2e)', () => {
       .expect(200);
     expect(unavailable.body.items).toHaveLength(1);
     expect(unavailable.body.items[0].title).toBe('Product 2');
+  });
+
+  it('supports full-text search, price sorting and facets', async () => {
+    const textSearch = await request(app.getHttpServer())
+      .get('/products')
+      .query({ q: 'Product 3' })
+      .expect(200);
+    expect(textSearch.body.items[0].title).toBe('Product 3');
+
+    const sorted = await request(app.getHttpServer())
+      .get('/products')
+      .query({ sort: 'price_asc' })
+      .expect(200);
+    expect(
+      sorted.body.items.map((product: { title: string }) => product.title),
+    ).toEqual(['Product 1', 'Product 2', 'Product 3', 'Product 4']);
+    expect(sorted.body.facets).toEqual(
+      expect.objectContaining({
+        categoryId: expect.any(Object),
+        sellerId: expect.any(Object),
+        type: expect.any(Object),
+        inStock: expect.any(Object),
+      }),
+    );
   });
 
   it('paginates with stable deterministic ordering', async () => {
