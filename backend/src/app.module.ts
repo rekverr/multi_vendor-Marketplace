@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
 import { CacheModule } from './cache/cache.module.js';
+import { CartModule } from './cart/cart.module.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
 import { envValidationSchema } from './config/env.validation.js';
 import { DatabaseModule } from './database/database.module.js';
@@ -27,6 +28,7 @@ import { SearchModule } from './search/search.module.js';
 
     DatabaseModule,
     CacheModule,
+    CartModule,
     AuthModule,
     CategoriesModule,
     ProductsModule,

@@ -9,3 +9,4 @@ process.env.GOOGLE_OAUTH_CLIENT_SECRET = 'google-client-secret-test';
 process.env.GOOGLE_OAUTH_REDIRECT_URI =
   'http://localhost:3000/auth/google/callback';
 process.env.GOOGLE_OAUTH_STATE_TTL_SECONDS = '600';
+process.env.OUTBOX_PUBLISHER_ENABLED = 'false';

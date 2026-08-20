@@ -62,3 +62,13 @@ export type OutboxEvent = Prisma.OutboxEventModel
  * 
  */
 export type ProcessedEvent = Prisma.ProcessedEventModel
+/**
+ * Model Cart
+ * 
+ */
+export type Cart = Prisma.CartModel
+/**
+ * Model CartItem
+ * 
+ */
+export type CartItem = Prisma.CartItemModel
