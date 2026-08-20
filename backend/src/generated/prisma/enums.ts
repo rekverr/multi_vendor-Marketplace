@@ -51,3 +51,64 @@ export const ProductStatus = {
 } as const
 
 export type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus]
+
+
+export const OrderStatus = {
+  NEW: 'NEW',
+  PROCESSING: 'PROCESSING',
+  PARTIALLY_SHIPPED: 'PARTIALLY_SHIPPED',
+  SHIPPED: 'SHIPPED',
+  PARTIALLY_COMPLETED: 'PARTIALLY_COMPLETED',
+  COMPLETED: 'COMPLETED',
+  PARTIALLY_CANCELLED: 'PARTIALLY_CANCELLED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
+
+
+export const SellerOrderStatus = {
+  NEW: 'NEW',
+  PROCESSING: 'PROCESSING',
+  SHIPPED: 'SHIPPED',
+  COMPLETED: 'COMPLETED',
+  PARTIALLY_CANCELLED: 'PARTIALLY_CANCELLED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type SellerOrderStatus = (typeof SellerOrderStatus)[keyof typeof SellerOrderStatus]
+
+
+export const LedgerAccount = {
+  PLATFORM: 'PLATFORM',
+  SELLER: 'SELLER'
+} as const
+
+export type LedgerAccount = (typeof LedgerAccount)[keyof typeof LedgerAccount]
+
+
+export const LedgerEntryType = {
+  COMMISSION: 'COMMISSION',
+  SELLER_EARNING: 'SELLER_EARNING',
+  REFUND_REVERSAL: 'REFUND_REVERSAL',
+  CANCELLATION_REVERSAL: 'CANCELLATION_REVERSAL'
+} as const
+
+export type LedgerEntryType = (typeof LedgerEntryType)[keyof typeof LedgerEntryType]
+
+
+export const LedgerDirection = {
+  CREDIT: 'CREDIT',
+  DEBIT: 'DEBIT'
+} as const
+
+export type LedgerDirection = (typeof LedgerDirection)[keyof typeof LedgerDirection]
+
+
+export const CheckoutIdempotencyStatus = {
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED'
+} as const
+
+export type CheckoutIdempotencyStatus = (typeof CheckoutIdempotencyStatus)[keyof typeof CheckoutIdempotencyStatus]

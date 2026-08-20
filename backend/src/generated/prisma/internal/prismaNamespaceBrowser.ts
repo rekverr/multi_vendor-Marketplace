@@ -61,7 +61,12 @@ export const ModelName = {
   OutboxEvent: 'OutboxEvent',
   ProcessedEvent: 'ProcessedEvent',
   Cart: 'Cart',
-  CartItem: 'CartItem'
+  CartItem: 'CartItem',
+  Order: 'Order',
+  SellerOrder: 'SellerOrder',
+  OrderItem: 'OrderItem',
+  FinancialLedgerEntry: 'FinancialLedgerEntry',
+  CheckoutIdempotency: 'CheckoutIdempotency'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -228,6 +233,97 @@ export const CartItemScalarFieldEnum = {
 } as const
 
 export type CartItemScalarFieldEnum = (typeof CartItemScalarFieldEnum)[keyof typeof CartItemScalarFieldEnum]
+
+
+export const OrderScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  status: 'status',
+  currency: 'currency',
+  totalAmount: 'totalAmount',
+  refundedAmount: 'refundedAmount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
+
+
+export const SellerOrderScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  sellerId: 'sellerId',
+  status: 'status',
+  currency: 'currency',
+  grossAmount: 'grossAmount',
+  commissionRate: 'commissionRate',
+  platformCommission: 'platformCommission',
+  sellerNet: 'sellerNet',
+  refundedGross: 'refundedGross',
+  refundedCommission: 'refundedCommission',
+  refundedSellerNet: 'refundedSellerNet',
+  cancelledAt: 'cancelledAt',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SellerOrderScalarFieldEnum = (typeof SellerOrderScalarFieldEnum)[keyof typeof SellerOrderScalarFieldEnum]
+
+
+export const OrderItemScalarFieldEnum = {
+  id: 'id',
+  sellerOrderId: 'sellerOrderId',
+  productId: 'productId',
+  productTitle: 'productTitle',
+  productImageUrl: 'productImageUrl',
+  productType: 'productType',
+  sellerIdSnapshot: 'sellerIdSnapshot',
+  sellerNameSnapshot: 'sellerNameSnapshot',
+  unitPrice: 'unitPrice',
+  quantity: 'quantity',
+  lineTotal: 'lineTotal',
+  cancelledQuantity: 'cancelledQuantity',
+  refundedQuantity: 'refundedQuantity',
+  refundedAmount: 'refundedAmount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof typeof OrderItemScalarFieldEnum]
+
+
+export const FinancialLedgerEntryScalarFieldEnum = {
+  id: 'id',
+  sellerOrderId: 'sellerOrderId',
+  orderItemId: 'orderItemId',
+  account: 'account',
+  entryType: 'entryType',
+  direction: 'direction',
+  amount: 'amount',
+  currency: 'currency',
+  idempotencyKey: 'idempotencyKey',
+  occurredAt: 'occurredAt',
+  createdAt: 'createdAt'
+} as const
+
+export type FinancialLedgerEntryScalarFieldEnum = (typeof FinancialLedgerEntryScalarFieldEnum)[keyof typeof FinancialLedgerEntryScalarFieldEnum]
+
+
+export const CheckoutIdempotencyScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  idempotencyKey: 'idempotencyKey',
+  requestHash: 'requestHash',
+  status: 'status',
+  orderId: 'orderId',
+  lastErrorCode: 'lastErrorCode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  completedAt: 'completedAt'
+} as const
+
+export type CheckoutIdempotencyScalarFieldEnum = (typeof CheckoutIdempotencyScalarFieldEnum)[keyof typeof CheckoutIdempotencyScalarFieldEnum]
 
 
 export const SortOrder = {

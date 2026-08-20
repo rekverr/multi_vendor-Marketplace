@@ -40,20 +40,65 @@ enum ProductStatus {
   ARCHIVED
 }
 
+enum OrderStatus {
+  NEW
+  PROCESSING
+  PARTIALLY_SHIPPED
+  SHIPPED
+  PARTIALLY_COMPLETED
+  COMPLETED
+  PARTIALLY_CANCELLED
+  CANCELLED
+}
+
+enum SellerOrderStatus {
+  NEW
+  PROCESSING
+  SHIPPED
+  COMPLETED
+  PARTIALLY_CANCELLED
+  CANCELLED
+}
+
+enum LedgerAccount {
+  PLATFORM
+  SELLER
+}
+
+enum LedgerEntryType {
+  COMMISSION
+  SELLER_EARNING
+  REFUND_REVERSAL
+  CANCELLATION_REVERSAL
+}
+
+enum LedgerDirection {
+  CREDIT
+  DEBIT
+}
+
+enum CheckoutIdempotencyStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model User {
-  id                         String              @id @default(uuid()) @db.Uuid
-  email                      String              @unique
+  id                         String                @id @default(uuid()) @db.Uuid
+  email                      String                @unique
   passwordHash               String?
-  role                       UserRole            @default(CUSTOMER)
-  createdAt                  DateTime            @default(now())
-  updatedAt                  DateTime            @updatedAt
+  role                       UserRole              @default(CUSTOMER)
+  createdAt                  DateTime              @default(now())
+  updatedAt                  DateTime              @updatedAt
   refreshSessions            RefreshSession[]
   oauthAccounts              OAuthAccount[]
-  sellerApplications         SellerApplication[] @relation("Applicant")
-  reviewedSellerApplications SellerApplication[] @relation("ApplicationReviewer")
+  sellerApplications         SellerApplication[]   @relation("Applicant")
+  reviewedSellerApplications SellerApplication[]   @relation("ApplicationReviewer")
   sellerProfile              SellerProfile?
-  moderatedProducts          Product[]           @relation("ProductModerator")
+  moderatedProducts          Product[]             @relation("ProductModerator")
   cart                       Cart?
+  orders                     Order[]
+  checkoutIdempotencies      CheckoutIdempotency[]
 }
 
 model OAuthAccount {
@@ -102,13 +147,14 @@ model SellerApplication {
 }
 
 model SellerProfile {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @unique @db.Uuid
-  displayName String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [userId], references: [id], onDelete: Restrict)
-  products    Product[]
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String        @unique @db.Uuid
+  displayName  String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  products     Product[]
+  sellerOrders SellerOrder[]
 }
 
 model Category {
@@ -140,6 +186,7 @@ model Product {
   category        Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   moderatedBy     User?         @relation("ProductModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
   cartItems       CartItem[]
+  orderItems      OrderItem[]
 
   @@index([sellerId, status])
   @@index([categoryId, status])
@@ -199,4 +246,112 @@ model CartItem {
 
   @@unique([cartId, productId])
   @@index([productId])
+}
+
+model Order {
+  id                    String                @id @default(uuid()) @db.Uuid
+  customerId            String                @db.Uuid
+  status                OrderStatus           @default(NEW)
+  currency              String                @db.VarChar(3)
+  totalAmount           Decimal               @db.Decimal(19, 2)
+  refundedAmount        Decimal               @default(0) @db.Decimal(19, 2)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  customer              User                  @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  sellerOrders          SellerOrder[]
+  checkoutIdempotencies CheckoutIdempotency[]
+
+  @@index([customerId, createdAt])
+  @@index([status, createdAt])
+}
+
+model SellerOrder {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  orderId            String                 @db.Uuid
+  sellerId           String                 @db.Uuid
+  status             SellerOrderStatus      @default(NEW)
+  currency           String                 @db.VarChar(3)
+  grossAmount        Decimal                @db.Decimal(19, 2)
+  commissionRate     Decimal                @db.Decimal(7, 6)
+  platformCommission Decimal                @db.Decimal(19, 2)
+  sellerNet          Decimal                @db.Decimal(19, 2)
+  refundedGross      Decimal                @default(0) @db.Decimal(19, 2)
+  refundedCommission Decimal                @default(0) @db.Decimal(19, 2)
+  refundedSellerNet  Decimal                @default(0) @db.Decimal(19, 2)
+  cancelledAt        DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  order              Order                  @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  seller             SellerProfile          @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  items              OrderItem[]
+  ledgerEntries      FinancialLedgerEntry[]
+
+  @@unique([orderId, sellerId])
+  @@index([sellerId, status, createdAt])
+  @@index([orderId, status])
+}
+
+model OrderItem {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  sellerOrderId      String                 @db.Uuid
+  productId          String                 @db.Uuid
+  productTitle       String
+  productImageUrl    String?
+  productType        ProductType
+  sellerIdSnapshot   String                 @db.Uuid
+  sellerNameSnapshot String
+  unitPrice          Decimal                @db.Decimal(19, 2)
+  quantity           Int
+  lineTotal          Decimal                @db.Decimal(19, 2)
+  cancelledQuantity  Int                    @default(0)
+  refundedQuantity   Int                    @default(0)
+  refundedAmount     Decimal                @default(0) @db.Decimal(19, 2)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  sellerOrder        SellerOrder            @relation(fields: [sellerOrderId], references: [id], onDelete: Restrict)
+  product            Product                @relation(fields: [productId], references: [id], onDelete: Restrict)
+  ledgerEntries      FinancialLedgerEntry[]
+
+  @@index([sellerOrderId])
+  @@index([productId])
+}
+
+model FinancialLedgerEntry {
+  id             String          @id @default(uuid()) @db.Uuid
+  sellerOrderId  String          @db.Uuid
+  orderItemId    String?         @db.Uuid
+  account        LedgerAccount
+  entryType      LedgerEntryType
+  direction      LedgerDirection
+  amount         Decimal         @db.Decimal(19, 2)
+  currency       String          @db.VarChar(3)
+  idempotencyKey String          @unique
+  occurredAt     DateTime        @default(now())
+  createdAt      DateTime        @default(now())
+  sellerOrder    SellerOrder     @relation(fields: [sellerOrderId], references: [id], onDelete: Restrict)
+  orderItem      OrderItem?      @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+
+  @@index([sellerOrderId, occurredAt])
+  @@index([entryType, occurredAt])
+  @@index([orderItemId])
+}
+
+model CheckoutIdempotency {
+  id             String                    @id @default(uuid()) @db.Uuid
+  customerId     String                    @db.Uuid
+  idempotencyKey String
+  requestHash    String
+  status         CheckoutIdempotencyStatus @default(PROCESSING)
+  orderId        String?                   @db.Uuid
+  lastErrorCode  String?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  completedAt    DateTime?
+  customer       User                      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  order          Order?                    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@unique([customerId, idempotencyKey])
+  @@unique([orderId])
+  @@index([status, createdAt])
 }

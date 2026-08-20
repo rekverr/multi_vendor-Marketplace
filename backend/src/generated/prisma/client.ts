@@ -96,3 +96,28 @@ export type Cart = Prisma.CartModel
  * 
  */
 export type CartItem = Prisma.CartItemModel
+/**
+ * Model Order
+ * 
+ */
+export type Order = Prisma.OrderModel
+/**
+ * Model SellerOrder
+ * 
+ */
+export type SellerOrder = Prisma.SellerOrderModel
+/**
+ * Model OrderItem
+ * 
+ */
+export type OrderItem = Prisma.OrderItemModel
+/**
+ * Model FinancialLedgerEntry
+ * 
+ */
+export type FinancialLedgerEntry = Prisma.FinancialLedgerEntryModel
+/**
+ * Model CheckoutIdempotency
+ * 
+ */
+export type CheckoutIdempotency = Prisma.CheckoutIdempotencyModel
