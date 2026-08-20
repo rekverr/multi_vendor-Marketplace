@@ -10,3 +10,115 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum UserRole {
+  CUSTOMER
+  SELLER
+  ADMIN
+}
+
+enum SellerApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProductType {
+  FIXED_PRICE
+  AUCTION
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+model User {
+  id                         String              @id @default(uuid()) @db.Uuid
+  email                      String              @unique
+  passwordHash               String
+  role                       UserRole            @default(CUSTOMER)
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+  refreshSessions            RefreshSession[]
+  sellerApplication          SellerApplication?  @relation("Applicant")
+  reviewedSellerApplications SellerApplication[] @relation("ApplicationReviewer")
+  sellerProfile              SellerProfile?
+  moderatedProducts          Product[]           @relation("ProductModerator")
+}
+
+model RefreshSession {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model SellerApplication {
+  id              String                  @id @default(uuid()) @db.Uuid
+  userId          String                  @unique @db.Uuid
+  status          SellerApplicationStatus @default(PENDING)
+  reviewedById    String?                 @db.Uuid
+  reviewedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  user            User                    @relation("Applicant", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy      User?                   @relation("ApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+}
+
+model SellerProfile {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @unique @db.Uuid
+  displayName String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  products    Product[]
+}
+
+model Category {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+model Product {
+  id              String        @id @default(uuid()) @db.Uuid
+  sellerId        String        @db.Uuid
+  categoryId      String        @db.Uuid
+  title           String
+  description     String
+  imageUrl        String?
+  type            ProductType
+  price           Decimal?      @db.Decimal(19, 2)
+  stock           Int           @default(0)
+  status          ProductStatus @default(DRAFT)
+  moderatedById   String?       @db.Uuid
+  moderatedAt     DateTime?
+  rejectionReason String?
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  seller          SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  category        Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  moderatedBy     User?         @relation("ProductModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+
+  @@index([sellerId, status])
+  @@index([categoryId, status])
+  @@index([status, type])
+}
