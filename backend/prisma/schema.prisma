@@ -99,6 +99,7 @@ model User {
   cart                       Cart?
   orders                     Order[]
   checkoutIdempotencies      CheckoutIdempotency[]
+  initiatedRefunds           Refund[]
 }
 
 model OAuthAccount {
@@ -260,6 +261,7 @@ model Order {
   customer              User                  @relation(fields: [customerId], references: [id], onDelete: Restrict)
   sellerOrders          SellerOrder[]
   checkoutIdempotencies CheckoutIdempotency[]
+  refunds               Refund[]
 
   @@index([customerId, createdAt])
   @@index([status, createdAt])
@@ -286,6 +288,7 @@ model SellerOrder {
   seller             SellerProfile          @relation(fields: [sellerId], references: [id], onDelete: Restrict)
   items              OrderItem[]
   ledgerEntries      FinancialLedgerEntry[]
+  refunds            Refund[]
 
   @@unique([orderId, sellerId])
   @@index([sellerId, status, createdAt])
@@ -312,6 +315,7 @@ model OrderItem {
   sellerOrder        SellerOrder            @relation(fields: [sellerOrderId], references: [id], onDelete: Restrict)
   product            Product                @relation(fields: [productId], references: [id], onDelete: Restrict)
   ledgerEntries      FinancialLedgerEntry[]
+  refunds            Refund[]
 
   @@index([sellerOrderId])
   @@index([productId])
@@ -354,4 +358,29 @@ model CheckoutIdempotency {
   @@unique([customerId, idempotencyKey])
   @@unique([orderId])
   @@index([status, createdAt])
+}
+
+model Refund {
+  id               String      @id @default(uuid()) @db.Uuid
+  initiatedById    String      @db.Uuid
+  orderId          String      @db.Uuid
+  sellerOrderId    String      @db.Uuid
+  orderItemId      String      @db.Uuid
+  idempotencyKey   String
+  requestHash      String
+  quantity         Int
+  amount           Decimal     @db.Decimal(19, 2)
+  commissionAmount Decimal     @db.Decimal(19, 2)
+  sellerNetAmount  Decimal     @db.Decimal(19, 2)
+  reason           String?     @db.VarChar(500)
+  createdAt        DateTime    @default(now())
+  initiatedBy      User        @relation(fields: [initiatedById], references: [id], onDelete: Restrict)
+  order            Order       @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  sellerOrder      SellerOrder @relation(fields: [sellerOrderId], references: [id], onDelete: Restrict)
+  orderItem        OrderItem   @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+
+  @@unique([initiatedById, idempotencyKey])
+  @@index([orderId, createdAt])
+  @@index([sellerOrderId, createdAt])
+  @@index([orderItemId, createdAt])
 }

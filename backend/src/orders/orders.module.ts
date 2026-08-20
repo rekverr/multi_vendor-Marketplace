@@ -3,6 +3,7 @@ import { AuthModule } from '../auth/auth.module.js';
 import { CheckoutController } from './checkout.controller.js';
 import { CheckoutService } from './checkout.service.js';
 import { CustomerOrdersController } from './customer-orders.controller.js';
+import { OrderAdjustmentsService } from './order-adjustments.service.js';
 import { OrderLifecycleService } from './order-lifecycle.service.js';
 import { SellerOrdersController } from './seller-orders.controller.js';
 
@@ -13,6 +14,6 @@ import { SellerOrdersController } from './seller-orders.controller.js';
     CustomerOrdersController,
     SellerOrdersController,
   ],
-  providers: [CheckoutService, OrderLifecycleService],
+  providers: [CheckoutService, OrderLifecycleService, OrderAdjustmentsService],
 })
 export class OrdersModule {}

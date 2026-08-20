@@ -95,7 +95,22 @@ export class OrderLifecycleService {
     correlationId: string,
   ) {
     const sellerId = await this.getSellerId(userId);
+    const owned = await this.prisma.sellerOrder.findFirst({
+      where: { id: sellerOrderId, sellerId },
+      select: { orderId: true },
+    });
+    if (!owned) throw new NotFoundException('SellerOrder not found');
+
     return this.prisma.$transaction(async (tx) => {
+      const lockedParents = await tx.$queryRaw<
+        Array<{ id: string; status: string }>
+      >(Prisma.sql`
+        SELECT id, status
+        FROM "Order"
+        WHERE id = ${owned.orderId}::uuid
+        FOR UPDATE
+      `);
+      const previousParentStatus = lockedParents[0]?.status;
       const locked = await tx.$queryRaw<
         Array<{ id: string; orderId: string; status: SellerOrderStatus }>
       >(Prisma.sql`
@@ -112,16 +127,6 @@ export class OrderLifecycleService {
           `SellerOrder cannot transition from ${current.status} to ${targetStatus}`,
         );
       }
-
-      const lockedParents = await tx.$queryRaw<
-        Array<{ id: string; status: string }>
-      >(Prisma.sql`
-        SELECT id, status
-        FROM "Order"
-        WHERE id = ${current.orderId}::uuid
-        FOR UPDATE
-      `);
-      const previousParentStatus = lockedParents[0]?.status;
       const sellerOrder = await tx.sellerOrder.update({
         where: { id: current.id },
         data: {

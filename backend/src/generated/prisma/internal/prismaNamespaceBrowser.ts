@@ -66,7 +66,8 @@ export const ModelName = {
   SellerOrder: 'SellerOrder',
   OrderItem: 'OrderItem',
   FinancialLedgerEntry: 'FinancialLedgerEntry',
-  CheckoutIdempotency: 'CheckoutIdempotency'
+  CheckoutIdempotency: 'CheckoutIdempotency',
+  Refund: 'Refund'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -324,6 +325,25 @@ export const CheckoutIdempotencyScalarFieldEnum = {
 } as const
 
 export type CheckoutIdempotencyScalarFieldEnum = (typeof CheckoutIdempotencyScalarFieldEnum)[keyof typeof CheckoutIdempotencyScalarFieldEnum]
+
+
+export const RefundScalarFieldEnum = {
+  id: 'id',
+  initiatedById: 'initiatedById',
+  orderId: 'orderId',
+  sellerOrderId: 'sellerOrderId',
+  orderItemId: 'orderItemId',
+  idempotencyKey: 'idempotencyKey',
+  requestHash: 'requestHash',
+  quantity: 'quantity',
+  amount: 'amount',
+  commissionAmount: 'commissionAmount',
+  sellerNetAmount: 'sellerNetAmount',
+  reason: 'reason',
+  createdAt: 'createdAt'
+} as const
+
+export type RefundScalarFieldEnum = (typeof RefundScalarFieldEnum)[keyof typeof RefundScalarFieldEnum]
 
 
 export const SortOrder = {

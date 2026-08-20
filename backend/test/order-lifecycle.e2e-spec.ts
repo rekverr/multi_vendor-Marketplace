@@ -172,6 +172,274 @@ describe('SellerOrder lifecycle (e2e)', () => {
     ).toBe(0);
   });
 
+  it('cancels one SellerOrder atomically and restores only its inventory', async () => {
+    const fixture = await seedOrder('seller-order-cancel');
+
+    await request(app.getHttpServer())
+      .post(
+        `/orders/${fixture.orderId}/seller-orders/${fixture.firstSellerOrderId}/cancel`,
+      )
+      .set('Authorization', `Bearer ${fixture.otherCustomer.token}`)
+      .send({})
+      .expect(404);
+
+    const cancelled = await request(app.getHttpServer())
+      .post(
+        `/orders/${fixture.orderId}/seller-orders/${fixture.firstSellerOrderId}/cancel`,
+      )
+      .set('Authorization', `Bearer ${fixture.customer.token}`)
+      .set('X-Correlation-Id', randomUUID())
+      .send({})
+      .expect(201);
+    expect(cancelled.body.status).toBe(SellerOrderStatus.CANCELLED);
+    expect(cancelled.body.orderStatus).toBe('PARTIALLY_CANCELLED');
+
+    const retry = await request(app.getHttpServer())
+      .post(
+        `/orders/${fixture.orderId}/seller-orders/${fixture.firstSellerOrderId}/cancel`,
+      )
+      .set('Authorization', `Bearer ${fixture.customer.token}`)
+      .send({})
+      .expect(201);
+    expect(retry.body.status).toBe(SellerOrderStatus.CANCELLED);
+
+    expect(
+      (
+        await prisma.product.findUniqueOrThrow({
+          where: { id: fixture.firstProductId },
+        })
+      ).stock,
+    ).toBe(3);
+    expect(
+      (
+        await prisma.product.findUniqueOrThrow({
+          where: { id: fixture.secondProductId },
+        })
+      ).stock,
+    ).toBe(2);
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: fixture.orderId },
+    });
+    expect(order.refundedAmount.toFixed(2)).toBe('30.00');
+    expect(
+      await prisma.financialLedgerEntry.count({
+        where: {
+          sellerOrderId: fixture.firstSellerOrderId,
+          entryType: 'CANCELLATION_REVERSAL',
+        },
+      }),
+    ).toBe(2);
+  });
+
+  it('rejects cancellation after shipment', async () => {
+    const fixture = await seedOrder('invalid-cancel-status');
+    await transition(
+      fixture.firstSeller.token,
+      fixture.firstSellerOrderId,
+      SellerOrderStatus.PROCESSING,
+      'PROCESSING',
+    );
+    await transition(
+      fixture.firstSeller.token,
+      fixture.firstSellerOrderId,
+      SellerOrderStatus.SHIPPED,
+      'PARTIALLY_SHIPPED',
+    );
+
+    await request(app.getHttpServer())
+      .post(
+        `/orders/${fixture.orderId}/seller-orders/${fixture.firstSellerOrderId}/cancel`,
+      )
+      .set('Authorization', `Bearer ${fixture.customer.token}`)
+      .send({})
+      .expect(409);
+    expect(
+      (
+        await prisma.product.findUniqueOrThrow({
+          where: { id: fixture.firstProductId },
+        })
+      ).stock,
+    ).toBe(0);
+  });
+
+  it('cancels an eligible parent Order atomically and is retry-safe', async () => {
+    const fixture = await seedOrder('parent-cancel');
+
+    const first = await request(app.getHttpServer())
+      .post(`/orders/${fixture.orderId}/cancel`)
+      .set('Authorization', `Bearer ${fixture.customer.token}`)
+      .set('X-Correlation-Id', randomUUID())
+      .send({})
+      .expect(201);
+    expect(first.body.status).toBe('CANCELLED');
+    expect(
+      first.body.sellerOrders.map(
+        (sellerOrder: { status: string }) => sellerOrder.status,
+      ),
+    ).toEqual(['CANCELLED', 'CANCELLED']);
+
+    await request(app.getHttpServer())
+      .post(`/orders/${fixture.orderId}/cancel`)
+      .set('Authorization', `Bearer ${fixture.customer.token}`)
+      .send({})
+      .expect(201);
+
+    expect(
+      await prisma.financialLedgerEntry.count({
+        where: {
+          sellerOrderId: {
+            in: [fixture.firstSellerOrderId, fixture.secondSellerOrderId],
+          },
+          entryType: 'CANCELLATION_REVERSAL',
+        },
+      }),
+    ).toBe(4);
+    expect(
+      await prisma.product.findMany({
+        where: {
+          id: { in: [fixture.firstProductId, fixture.secondProductId] },
+        },
+        orderBy: { id: 'asc' },
+        select: { stock: true },
+      }),
+    ).toEqual([{ stock: 3 }, { stock: 3 }]);
+  });
+
+  it('creates bounded idempotent item refunds from historical prices', async () => {
+    const fixture = await seedOrder('partial-refund');
+    await transition(
+      fixture.firstSeller.token,
+      fixture.firstSellerOrderId,
+      SellerOrderStatus.PROCESSING,
+      'PROCESSING',
+    );
+    await transition(
+      fixture.firstSeller.token,
+      fixture.firstSellerOrderId,
+      SellerOrderStatus.SHIPPED,
+      'PARTIALLY_SHIPPED',
+    );
+    await transition(
+      fixture.firstSeller.token,
+      fixture.firstSellerOrderId,
+      SellerOrderStatus.COMPLETED,
+      'PARTIALLY_COMPLETED',
+    );
+    await prisma.product.update({
+      where: { id: fixture.firstProductId },
+      data: { price: '999.00' },
+    });
+
+    await request(app.getHttpServer())
+      .post(
+        `/seller/orders/${fixture.firstSellerOrderId}/items/${fixture.firstItemId}/refunds`,
+      )
+      .set('Authorization', `Bearer ${fixture.secondSeller.token}`)
+      .set('Idempotency-Key', 'unauthorized-refund')
+      .send({ quantity: 1 })
+      .expect(404);
+
+    const headers = {
+      Authorization: `Bearer ${fixture.firstSeller.token}`,
+      'Idempotency-Key': 'partial-refund-request',
+    };
+    const first = await request(app.getHttpServer())
+      .post(
+        `/seller/orders/${fixture.firstSellerOrderId}/items/${fixture.firstItemId}/refunds`,
+      )
+      .set(headers)
+      .send({ quantity: 1, reason: 'Damaged item' })
+      .expect(201);
+    expect(first.body).toMatchObject({
+      quantity: 1,
+      amount: '10',
+      commissionAmount: '1',
+      sellerNetAmount: '9',
+    });
+
+    const retry = await request(app.getHttpServer())
+      .post(
+        `/seller/orders/${fixture.firstSellerOrderId}/items/${fixture.firstItemId}/refunds`,
+      )
+      .set(headers)
+      .send({ quantity: 1, reason: 'Damaged item' })
+      .expect(201);
+    expect(retry.body.id).toBe(first.body.id);
+
+    await request(app.getHttpServer())
+      .post(
+        `/seller/orders/${fixture.firstSellerOrderId}/items/${fixture.firstItemId}/refunds`,
+      )
+      .set(headers)
+      .send({ quantity: 2, reason: 'Damaged item' })
+      .expect(409);
+    await request(app.getHttpServer())
+      .post(
+        `/seller/orders/${fixture.firstSellerOrderId}/items/${fixture.firstItemId}/refunds`,
+      )
+      .set('Authorization', `Bearer ${fixture.firstSeller.token}`)
+      .set('Idempotency-Key', 'excessive-refund-request')
+      .send({ quantity: 3 })
+      .expect(409);
+
+    expect(await prisma.refund.count()).toBe(1);
+    const item = await prisma.orderItem.findUniqueOrThrow({
+      where: { id: fixture.firstItemId },
+    });
+    expect(item.refundedQuantity).toBe(1);
+    expect(item.refundedAmount.toFixed(2)).toBe('10.00');
+    const sellerOrder = await prisma.sellerOrder.findUniqueOrThrow({
+      where: { id: fixture.firstSellerOrderId },
+    });
+    expect(sellerOrder.refundedGross.toFixed(2)).toBe('10.00');
+    expect(sellerOrder.refundedCommission.toFixed(2)).toBe('1.00');
+    expect(sellerOrder.refundedSellerNet.toFixed(2)).toBe('9.00');
+    expect(
+      (
+        await prisma.order.findUniqueOrThrow({
+          where: { id: fixture.orderId },
+        })
+      ).refundedAmount.toFixed(2),
+    ).toBe('10.00');
+    const reversals = await prisma.financialLedgerEntry.findMany({
+      where: {
+        sellerOrderId: fixture.firstSellerOrderId,
+        orderItemId: fixture.firstItemId,
+        entryType: 'REFUND_REVERSAL',
+      },
+      orderBy: { account: 'asc' },
+    });
+    expect(
+      reversals.map((entry) => ({
+        account: entry.account,
+        direction: entry.direction,
+        amount: entry.amount.toFixed(2),
+      })),
+    ).toEqual([
+      { account: 'PLATFORM', direction: 'DEBIT', amount: '1.00' },
+      { account: 'SELLER', direction: 'DEBIT', amount: '9.00' },
+    ]);
+    expect(
+      await prisma.outboxEvent.count({
+        where: { aggregateId: first.body.id, eventType: 'REFUND_CREATED' },
+      }),
+    ).toBe(1);
+  });
+
+  it('rejects item refunds before completion', async () => {
+    const fixture = await seedOrder('invalid-refund-status');
+
+    await request(app.getHttpServer())
+      .post(
+        `/seller/orders/${fixture.firstSellerOrderId}/items/${fixture.firstItemId}/refunds`,
+      )
+      .set('Authorization', `Bearer ${fixture.firstSeller.token}`)
+      .set('Idempotency-Key', 'invalid-status-refund')
+      .send({ quantity: 1 })
+      .expect(409);
+    expect(await prisma.refund.count()).toBe(0);
+  });
+
   afterAll(async () => {
     if (!prisma || !app) return;
     await cleanup();
@@ -211,7 +479,7 @@ describe('SellerOrder lifecycle (e2e)', () => {
         userId: customer.userId,
         items: {
           create: [
-            { productId: firstProduct.id, quantity: 1 },
+            { productId: firstProduct.id, quantity: 3 },
             { productId: secondProduct.id, quantity: 1 },
           ],
         },
@@ -239,6 +507,9 @@ describe('SellerOrder lifecycle (e2e)', () => {
       orderId: checkout.body.id as string,
       firstSellerOrderId: firstSellerOrder.id as string,
       secondSellerOrderId: secondSellerOrder.id as string,
+      firstItemId: firstSellerOrder.items[0].id as string,
+      firstProductId: firstProduct.id,
+      secondProductId: secondProduct.id,
     };
   }
 
@@ -326,6 +597,7 @@ describe('SellerOrder lifecycle (e2e)', () => {
           ? { aggregateId: { in: aggregateIds } }
           : { id: randomUUID() },
       }),
+      prisma.refund.deleteMany({ where: { initiatedBy: users } }),
       prisma.financialLedgerEntry.deleteMany({
         where: { sellerOrder: { order: { customer: users } } },
       }),

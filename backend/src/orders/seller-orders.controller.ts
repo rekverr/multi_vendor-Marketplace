@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -16,8 +18,10 @@ import { RolesGuard } from '../auth/roles.guard.js';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.js';
 import { CorrelationId } from '../common/correlation-id.decorator.js';
 import { UserRole } from '../generated/prisma/client.js';
+import { CreateItemRefundDto } from './dto/create-item-refund.dto.js';
 import { ListOrdersQueryDto } from './dto/list-orders-query.dto.js';
 import { UpdateSellerOrderStatusDto } from './dto/update-seller-order-status.dto.js';
+import { OrderAdjustmentsService } from './order-adjustments.service.js';
 import { OrderLifecycleService } from './order-lifecycle.service.js';
 
 @ApiTags('seller-orders')
@@ -26,7 +30,10 @@ import { OrderLifecycleService } from './order-lifecycle.service.js';
 @Roles(UserRole.SELLER)
 @Controller('seller/orders')
 export class SellerOrdersController {
-  constructor(private readonly orders: OrderLifecycleService) {}
+  constructor(
+    private readonly orders: OrderLifecycleService,
+    private readonly adjustments: OrderAdjustmentsService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List authenticated Seller orders' })
@@ -58,6 +65,26 @@ export class SellerOrdersController {
       user.id,
       id,
       dto.status,
+      correlationId,
+    );
+  }
+
+  @Post(':sellerOrderId/items/:itemId/refunds')
+  @ApiOperation({ summary: 'Create an item-level partial refund' })
+  refundItem(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('sellerOrderId', new ParseUUIDPipe()) sellerOrderId: string,
+    @Param('itemId', new ParseUUIDPipe()) itemId: string,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Body() dto: CreateItemRefundDto,
+    @CorrelationId() correlationId: string,
+  ) {
+    return this.adjustments.refundItem(
+      user.id,
+      sellerOrderId,
+      itemId,
+      idempotencyKey ?? '',
+      dto,
       correlationId,
     );
   }
