@@ -36,6 +36,7 @@ export class CheckoutController {
       user.id,
       idempotencyKey ?? '',
       correlationId,
+      _dto.requestContext,
     );
   }
 }

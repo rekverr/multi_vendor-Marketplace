@@ -150,12 +150,12 @@ describe('Customer checkout (e2e)', () => {
     const first = await request(app.getHttpServer())
       .post('/checkout')
       .set(headers)
-      .send({})
+      .send({ requestContext: 'cart-submit-1' })
       .expect(201);
     const retry = await request(app.getHttpServer())
       .post('/checkout')
       .set(headers)
-      .send({})
+      .send({ requestContext: 'cart-submit-1' })
       .expect(201);
 
     expect(retry.body.id).toBe(first.body.id);
@@ -170,6 +170,106 @@ describe('Customer checkout (e2e)', () => {
       ).stock,
     ).toBe(1);
     expect(await prisma.financialLedgerEntry.count()).toBe(2);
+  });
+
+  it('rejects conflicting reuse of an idempotency key', async () => {
+    const customer = await createCustomer('conflicting-retry');
+    const product = await createProduct(
+      'conflicting-retry-seller',
+      'Conflicting Retry Product',
+      '15.00',
+      2,
+    );
+    await createCart(customer.userId, [
+      { productId: product.productId, quantity: 1 },
+    ]);
+    const headers = {
+      Authorization: `Bearer ${customer.token}`,
+      'Idempotency-Key': 'conflicting-checkout-request',
+    };
+
+    const first = await request(app.getHttpServer())
+      .post('/checkout')
+      .set(headers)
+      .send({ requestContext: 'cart-state-a' })
+      .expect(201);
+    const conflict = await request(app.getHttpServer())
+      .post('/checkout')
+      .set(headers)
+      .send({ requestContext: 'cart-state-b' })
+      .expect(409);
+
+    expect(conflict.body.message).toBe(
+      'Idempotency key was used for another request',
+    );
+    expect(
+      await prisma.order.count({ where: { customerId: customer.userId } }),
+    ).toBe(1);
+    expect(
+      (
+        await prisma.product.findUniqueOrThrow({
+          where: { id: product.productId },
+        })
+      ).stock,
+    ).toBe(1);
+    expect(first.body.id).toBeDefined();
+  });
+
+  it('allows exactly one of two concurrent Customers to consume stock 1', async () => {
+    for (let iteration = 0; iteration < 3; iteration += 1) {
+      const firstCustomer = await createCustomer(`race-${iteration}-a`);
+      const secondCustomer = await createCustomer(`race-${iteration}-b`);
+      const product = await createProduct(
+        `race-${iteration}-seller`,
+        `Race Product ${iteration}`,
+        '7.00',
+        1,
+      );
+      await Promise.all([
+        createCart(firstCustomer.userId, [
+          { productId: product.productId, quantity: 1 },
+        ]),
+        createCart(secondCustomer.userId, [
+          { productId: product.productId, quantity: 1 },
+        ]),
+      ]);
+
+      const [first, second] = await Promise.all([
+        request(app.getHttpServer())
+          .post('/checkout')
+          .set('Authorization', `Bearer ${firstCustomer.token}`)
+          .set('Idempotency-Key', `race-${iteration}-checkout-a`)
+          .send({ requestContext: `race-${iteration}-a` }),
+        request(app.getHttpServer())
+          .post('/checkout')
+          .set('Authorization', `Bearer ${secondCustomer.token}`)
+          .set('Idempotency-Key', `race-${iteration}-checkout-b`)
+          .send({ requestContext: `race-${iteration}-b` }),
+      ]);
+
+      expect([first.status, second.status].sort()).toEqual([201, 409]);
+      expect(
+        (
+          await prisma.product.findUniqueOrThrow({
+            where: { id: product.productId },
+          })
+        ).stock,
+      ).toBe(0);
+      expect(
+        await prisma.order.count({
+          where: {
+            customerId: {
+              in: [firstCustomer.userId, secondCustomer.userId],
+            },
+          },
+        }),
+      ).toBe(1);
+      expect(
+        await prisma.orderItem.count({
+          where: { productId: product.productId },
+        }),
+      ).toBe(1);
+    }
   });
 
   it('rolls back all checkout effects when authoritative stock is insufficient', async () => {

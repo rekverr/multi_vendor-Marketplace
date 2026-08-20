@@ -46,9 +46,6 @@ interface CheckoutLine {
 export class CheckoutService {
   private readonly commissionRate: Prisma.Decimal;
   private readonly currency: string;
-  private readonly requestHash = createHash('sha256')
-    .update('customer-checkout:v1')
-    .digest('hex');
 
   constructor(
     private readonly prisma: PrismaService,
@@ -65,11 +62,13 @@ export class CheckoutService {
     customerId: string,
     idempotencyKey: string,
     correlationId: string,
+    requestContext?: string,
   ) {
     this.validateIdempotencyKey(idempotencyKey);
+    const requestHash = this.createRequestHash(requestContext);
 
     const existing = await this.findIdempotency(customerId, idempotencyKey);
-    if (existing) return this.resolveExisting(existing, this.requestHash);
+    if (existing) return this.resolveExisting(existing, requestHash);
 
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
@@ -77,6 +76,7 @@ export class CheckoutService {
           customerId,
           idempotencyKey,
           correlationId,
+          requestHash,
         );
       } catch (error) {
         if (this.isIdempotencyConflict(error)) {
@@ -84,10 +84,14 @@ export class CheckoutService {
             customerId,
             idempotencyKey,
           );
-          if (concurrent)
-            return this.resolveExisting(concurrent, this.requestHash);
+          if (concurrent) return this.resolveExisting(concurrent, requestHash);
         }
-        if (this.isSerializationFailure(error) && attempt < 3) continue;
+        if (this.isSerializationFailure(error)) {
+          if (attempt < 3) continue;
+          throw new ConflictException(
+            'Checkout conflicted with another inventory update',
+          );
+        }
         throw error;
       }
     }
@@ -99,6 +103,7 @@ export class CheckoutService {
     customerId: string,
     idempotencyKey: string,
     correlationId: string,
+    requestHash: string,
   ) {
     return this.prisma.$transaction(
       async (tx) => {
@@ -114,7 +119,7 @@ export class CheckoutService {
           data: {
             customerId,
             idempotencyKey,
-            requestHash: this.requestHash,
+            requestHash,
           },
         });
 
@@ -371,10 +376,31 @@ export class CheckoutService {
     }
   }
 
+  private createRequestHash(requestContext?: string): string {
+    return createHash('sha256')
+      .update(
+        JSON.stringify({
+          operation: 'customer-checkout:v1',
+          requestContext: requestContext ?? null,
+        }),
+      )
+      .digest('hex');
+  }
+
   private isSerializationFailure(error: unknown): boolean {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError)) return false;
+    if (error.code === 'P2034') return true;
+    if (error.code !== 'P2010') return false;
+
+    const databaseCode =
+      typeof error.meta === 'object' && error.meta !== null
+        ? Reflect.get(error.meta, 'code')
+        : undefined;
     return (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2034'
+      databaseCode === '40001' ||
+      databaseCode === '40P01' ||
+      error.message.includes('Code: `40001`') ||
+      error.message.includes('Code: `40P01`')
     );
   }
 
