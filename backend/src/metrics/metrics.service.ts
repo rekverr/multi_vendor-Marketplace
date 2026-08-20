@@ -8,6 +8,8 @@ export class MetricsService {
   private readonly queueFailedTotal: Counter<'queue'>;
   private readonly outboxPublishFailedTotal: Counter;
   private readonly outboxBacklog: Gauge;
+  private readonly auctionBidsAcceptedTotal: Counter;
+  private readonly auctionBidsRejectedTotal: Counter;
 
   constructor() {
     this.registry = new Registry();
@@ -39,6 +41,16 @@ export class MetricsService {
       help: 'Current number of unpublished Outbox events',
       registers: [this.registry],
     });
+    this.auctionBidsAcceptedTotal = new Counter({
+      name: 'marketplace_auction_bids_accepted_total',
+      help: 'Number of accepted Auction bids',
+      registers: [this.registry],
+    });
+    this.auctionBidsRejectedTotal = new Counter({
+      name: 'marketplace_auction_bids_rejected_total',
+      help: 'Number of rejected Auction bids',
+      registers: [this.registry],
+    });
   }
 
   recordQueueProcessed(queue: string): void {
@@ -55,6 +67,14 @@ export class MetricsService {
 
   setOutboxBacklog(value: number): void {
     this.outboxBacklog.set(value);
+  }
+
+  recordAuctionBidAccepted(): void {
+    this.auctionBidsAcceptedTotal.inc();
+  }
+
+  recordAuctionBidRejected(): void {
+    this.auctionBidsRejectedTotal.inc();
   }
 
   get contentType(): string {

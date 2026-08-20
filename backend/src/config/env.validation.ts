@@ -58,6 +58,21 @@ export const envValidationSchema = Joi.object({
     .pattern(/^[A-Z]{3}$/)
     .default('USD'),
 
+  AUCTION_WINNER_CHECKOUT_WINDOW_SECONDS: Joi.number()
+    .integer()
+    .positive()
+    .default(86400),
+
+  AUCTION_MAINTENANCE_ENABLED: Joi.boolean()
+    .truthy('true')
+    .falsy('false')
+    .default(true),
+
+  AUCTION_MAINTENANCE_INTERVAL_MS: Joi.number()
+    .integer()
+    .min(1000)
+    .default(5000),
+
   MEILI_HOST: Joi.string().uri().required(),
 
   MEILI_MASTER_KEY: Joi.string().min(8).required(),

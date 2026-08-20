@@ -1,12 +1,26 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
+import { MetricsModule } from '../metrics/metrics.module.js';
 import { AuctionsService } from './auctions.service.js';
+import { AuctionCommandsService } from './auction-commands.service.js';
+import { AuctionMaintenanceService } from './auction-maintenance.service.js';
+import { AdminAuctionsController } from './admin-auctions.controller.js';
+import { BidsController } from './bids.controller.js';
 import { PublicAuctionsController } from './public-auctions.controller.js';
 import { SellerAuctionsController } from './seller-auctions.controller.js';
 
 @Module({
-  imports: [AuthModule],
-  controllers: [SellerAuctionsController, PublicAuctionsController],
-  providers: [AuctionsService],
+  imports: [AuthModule, MetricsModule],
+  controllers: [
+    SellerAuctionsController,
+    PublicAuctionsController,
+    BidsController,
+    AdminAuctionsController,
+  ],
+  providers: [
+    AuctionsService,
+    AuctionCommandsService,
+    AuctionMaintenanceService,
+  ],
 })
 export class AuctionsModule {}
