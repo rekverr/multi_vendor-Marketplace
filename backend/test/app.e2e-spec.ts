@@ -1,29 +1,56 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import type { App } from 'supertest/types.js';
 
-describe('AppController (e2e)', () => {
+import { AppModule } from '../src/app.module.js';
+import { configureApp } from '../src/app.setup.js';
+
+describe('Backend foundation (e2e)', () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    configureApp(app);
     await app.init();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
+  it('GET /health reports PostgreSQL as available', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/health')
       .expect(200)
-      .expect('Hello World!');
+      .expect('Content-Type', /json/);
+
+    expect(response.body).toMatchObject({
+      status: 'ok',
+      info: {
+        database: {
+          status: 'up',
+        },
+      },
+    });
   });
 
-  afterEach(async () => {
+  it('GET /metrics exposes Prometheus metrics', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/metrics')
+      .expect(200)
+      .expect('Content-Type', /text\/plain/);
+
+    expect(response.text).toContain('# HELP marketplace_process_cpu_user_seconds_total');
+  });
+
+  it('GET /docs serves Swagger UI', async () => {
+    const response = await request(app.getHttpServer()).get('/docs').expect(200);
+
+    expect(response.text).toContain('Swagger UI');
+  });
+
+  afterAll(async () => {
     await app.close();
   });
 });
