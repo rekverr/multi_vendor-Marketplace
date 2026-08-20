@@ -11,6 +11,7 @@ import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
 import { MetricsModule } from './metrics/metrics.module.js';
 import { OutboxModule } from './outbox/outbox.module.js';
+import { OrdersModule } from './orders/orders.module.js';
 import { ProductsModule } from './products/products.module.js';
 import { SellersModule } from './sellers/sellers.module.js';
 import { SearchModule } from './search/search.module.js';
@@ -36,6 +37,7 @@ import { SearchModule } from './search/search.module.js';
     HealthModule,
     MetricsModule,
     OutboxModule,
+    OrdersModule,
     SearchModule,
   ],
 })

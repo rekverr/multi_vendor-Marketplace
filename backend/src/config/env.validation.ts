@@ -50,6 +50,14 @@ export const envValidationSchema = Joi.object({
     .falsy('false')
     .default(true),
 
+  PLATFORM_COMMISSION_RATE: Joi.string()
+    .pattern(/^(?:0(?:\.\d{1,6})?|1(?:\.0{1,6})?)$/)
+    .default('0.100000'),
+
+  ORDER_CURRENCY: Joi.string()
+    .pattern(/^[A-Z]{3}$/)
+    .default('USD'),
+
   MEILI_HOST: Joi.string().uri().required(),
 
   MEILI_MASTER_KEY: Joi.string().min(8).required(),

@@ -10,3 +10,5 @@ process.env.GOOGLE_OAUTH_REDIRECT_URI =
   'http://localhost:3000/auth/google/callback';
 process.env.GOOGLE_OAUTH_STATE_TTL_SECONDS = '600';
 process.env.OUTBOX_PUBLISHER_ENABLED = 'false';
+process.env.PLATFORM_COMMISSION_RATE = '0.100000';
+process.env.ORDER_CURRENCY = 'USD';
