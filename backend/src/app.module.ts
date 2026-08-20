@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AuthModule } from './auth/auth.module.js';
+import { AuctionsModule } from './auctions/auctions.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
 import { CacheModule } from './cache/cache.module.js';
 import { CartModule } from './cart/cart.module.js';
@@ -31,6 +32,7 @@ import { SearchModule } from './search/search.module.js';
     CacheModule,
     CartModule,
     AuthModule,
+    AuctionsModule,
     CategoriesModule,
     ProductsModule,
     SellersModule,

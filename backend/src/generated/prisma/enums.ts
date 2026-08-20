@@ -112,3 +112,15 @@ export const CheckoutIdempotencyStatus = {
 } as const
 
 export type CheckoutIdempotencyStatus = (typeof CheckoutIdempotencyStatus)[keyof typeof CheckoutIdempotencyStatus]
+
+
+export const AuctionStatus = {
+  SCHEDULED: 'SCHEDULED',
+  ACTIVE: 'ACTIVE',
+  ENDED: 'ENDED',
+  SOLD: 'SOLD',
+  UNSOLD: 'UNSOLD',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type AuctionStatus = (typeof AuctionStatus)[keyof typeof AuctionStatus]

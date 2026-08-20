@@ -164,7 +164,7 @@ describe('Category and Seller Product management (e2e)', () => {
       .expect(404);
   });
 
-  it('validates Product price, stock, image URL and unsupported Auction type', async () => {
+  it('validates Product price, stock, image URL and type-specific pricing', async () => {
     const adminToken = await createAdminAndLogin();
     const sellerToken = await createApprovedSeller(
       SELLER_A_EMAIL,
@@ -200,7 +200,14 @@ describe('Category and Seller Product management (e2e)', () => {
     await request(app.getHttpServer())
       .post('/seller/products')
       .set('Authorization', `Bearer ${sellerToken}`)
-      .send({ ...productPayload(category.id), type: 'AUCTION', price: null })
+      .send({ ...productPayload(category.id), type: 'AUCTION' })
+      .expect(400);
+
+    const { price: _price, ...fixedWithoutPrice } = productPayload(category.id);
+    await request(app.getHttpServer())
+      .post('/seller/products')
+      .set('Authorization', `Bearer ${sellerToken}`)
+      .send(fixedWithoutPrice)
       .expect(400);
   });
 

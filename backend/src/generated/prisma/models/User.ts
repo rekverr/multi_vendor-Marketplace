@@ -200,6 +200,8 @@ export type UserWhereInput = {
   orders?: Prisma.OrderListRelationFilter
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyListRelationFilter
   initiatedRefunds?: Prisma.RefundListRelationFilter
+  bids?: Prisma.BidListRelationFilter
+  wonAuctions?: Prisma.AuctionListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -219,6 +221,8 @@ export type UserOrderByWithRelationInput = {
   orders?: Prisma.OrderOrderByRelationAggregateInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyOrderByRelationAggregateInput
   initiatedRefunds?: Prisma.RefundOrderByRelationAggregateInput
+  bids?: Prisma.BidOrderByRelationAggregateInput
+  wonAuctions?: Prisma.AuctionOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -241,6 +245,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   orders?: Prisma.OrderListRelationFilter
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyListRelationFilter
   initiatedRefunds?: Prisma.RefundListRelationFilter
+  bids?: Prisma.BidListRelationFilter
+  wonAuctions?: Prisma.AuctionListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -284,6 +290,8 @@ export type UserCreateInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -303,6 +311,8 @@ export type UserUncheckedCreateInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUpdateInput = {
@@ -322,6 +332,8 @@ export type UserUpdateInput = {
   orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -341,6 +353,8 @@ export type UserUncheckedUpdateInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -567,6 +581,36 @@ export type UserUpdateOneRequiredWithoutInitiatedRefundsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutInitiatedRefundsInput, Prisma.UserUpdateWithoutInitiatedRefundsInput>, Prisma.UserUncheckedUpdateWithoutInitiatedRefundsInput>
 }
 
+export type UserCreateNestedOneWithoutWonAuctionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWonAuctionsInput, Prisma.UserUncheckedCreateWithoutWonAuctionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWonAuctionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutWonAuctionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWonAuctionsInput, Prisma.UserUncheckedCreateWithoutWonAuctionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWonAuctionsInput
+  upsert?: Prisma.UserUpsertWithoutWonAuctionsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWonAuctionsInput, Prisma.UserUpdateWithoutWonAuctionsInput>, Prisma.UserUncheckedUpdateWithoutWonAuctionsInput>
+}
+
+export type UserCreateNestedOneWithoutBidsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutBidsInput, Prisma.UserUncheckedCreateWithoutBidsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutBidsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutBidsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutBidsInput, Prisma.UserUncheckedCreateWithoutBidsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutBidsInput
+  upsert?: Prisma.UserUpsertWithoutBidsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutBidsInput, Prisma.UserUpdateWithoutBidsInput>, Prisma.UserUncheckedUpdateWithoutBidsInput>
+}
+
 export type UserCreateWithoutOauthAccountsInput = {
   id?: string
   email: string
@@ -583,6 +627,8 @@ export type UserCreateWithoutOauthAccountsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateWithoutOauthAccountsInput = {
@@ -601,6 +647,8 @@ export type UserUncheckedCreateWithoutOauthAccountsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserCreateOrConnectWithoutOauthAccountsInput = {
@@ -635,6 +683,8 @@ export type UserUpdateWithoutOauthAccountsInput = {
   orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthAccountsInput = {
@@ -653,6 +703,8 @@ export type UserUncheckedUpdateWithoutOauthAccountsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserCreateWithoutRefreshSessionsInput = {
@@ -671,6 +723,8 @@ export type UserCreateWithoutRefreshSessionsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateWithoutRefreshSessionsInput = {
@@ -689,6 +743,8 @@ export type UserUncheckedCreateWithoutRefreshSessionsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserCreateOrConnectWithoutRefreshSessionsInput = {
@@ -723,6 +779,8 @@ export type UserUpdateWithoutRefreshSessionsInput = {
   orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRefreshSessionsInput = {
@@ -741,6 +799,8 @@ export type UserUncheckedUpdateWithoutRefreshSessionsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserCreateWithoutSellerApplicationsInput = {
@@ -759,6 +819,8 @@ export type UserCreateWithoutSellerApplicationsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateWithoutSellerApplicationsInput = {
@@ -777,6 +839,8 @@ export type UserUncheckedCreateWithoutSellerApplicationsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserCreateOrConnectWithoutSellerApplicationsInput = {
@@ -800,6 +864,8 @@ export type UserCreateWithoutReviewedSellerApplicationsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateWithoutReviewedSellerApplicationsInput = {
@@ -818,6 +884,8 @@ export type UserUncheckedCreateWithoutReviewedSellerApplicationsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserCreateOrConnectWithoutReviewedSellerApplicationsInput = {
@@ -852,6 +920,8 @@ export type UserUpdateWithoutSellerApplicationsInput = {
   orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSellerApplicationsInput = {
@@ -870,6 +940,8 @@ export type UserUncheckedUpdateWithoutSellerApplicationsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUpsertWithoutReviewedSellerApplicationsInput = {
@@ -899,6 +971,8 @@ export type UserUpdateWithoutReviewedSellerApplicationsInput = {
   orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewedSellerApplicationsInput = {
@@ -917,6 +991,8 @@ export type UserUncheckedUpdateWithoutReviewedSellerApplicationsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserCreateWithoutSellerProfileInput = {
@@ -935,6 +1011,8 @@ export type UserCreateWithoutSellerProfileInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateWithoutSellerProfileInput = {
@@ -953,6 +1031,8 @@ export type UserUncheckedCreateWithoutSellerProfileInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserCreateOrConnectWithoutSellerProfileInput = {
@@ -987,6 +1067,8 @@ export type UserUpdateWithoutSellerProfileInput = {
   orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSellerProfileInput = {
@@ -1005,6 +1087,8 @@ export type UserUncheckedUpdateWithoutSellerProfileInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserCreateWithoutModeratedProductsInput = {
@@ -1023,6 +1107,8 @@ export type UserCreateWithoutModeratedProductsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateWithoutModeratedProductsInput = {
@@ -1041,6 +1127,8 @@ export type UserUncheckedCreateWithoutModeratedProductsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserCreateOrConnectWithoutModeratedProductsInput = {
@@ -1075,6 +1163,8 @@ export type UserUpdateWithoutModeratedProductsInput = {
   orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutModeratedProductsInput = {
@@ -1093,6 +1183,8 @@ export type UserUncheckedUpdateWithoutModeratedProductsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserCreateWithoutCartInput = {
@@ -1111,6 +1203,8 @@ export type UserCreateWithoutCartInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateWithoutCartInput = {
@@ -1129,6 +1223,8 @@ export type UserUncheckedCreateWithoutCartInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserCreateOrConnectWithoutCartInput = {
@@ -1163,6 +1259,8 @@ export type UserUpdateWithoutCartInput = {
   orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCartInput = {
@@ -1181,6 +1279,8 @@ export type UserUncheckedUpdateWithoutCartInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserCreateWithoutOrdersInput = {
@@ -1199,6 +1299,8 @@ export type UserCreateWithoutOrdersInput = {
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateWithoutOrdersInput = {
@@ -1217,6 +1319,8 @@ export type UserUncheckedCreateWithoutOrdersInput = {
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserCreateOrConnectWithoutOrdersInput = {
@@ -1251,6 +1355,8 @@ export type UserUpdateWithoutOrdersInput = {
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOrdersInput = {
@@ -1269,6 +1375,8 @@ export type UserUncheckedUpdateWithoutOrdersInput = {
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserCreateWithoutCheckoutIdempotenciesInput = {
@@ -1287,6 +1395,8 @@ export type UserCreateWithoutCheckoutIdempotenciesInput = {
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateWithoutCheckoutIdempotenciesInput = {
@@ -1305,6 +1415,8 @@ export type UserUncheckedCreateWithoutCheckoutIdempotenciesInput = {
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
   initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserCreateOrConnectWithoutCheckoutIdempotenciesInput = {
@@ -1339,6 +1451,8 @@ export type UserUpdateWithoutCheckoutIdempotenciesInput = {
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCheckoutIdempotenciesInput = {
@@ -1357,6 +1471,8 @@ export type UserUncheckedUpdateWithoutCheckoutIdempotenciesInput = {
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
   initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserCreateWithoutInitiatedRefundsInput = {
@@ -1375,6 +1491,8 @@ export type UserCreateWithoutInitiatedRefundsInput = {
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
 }
 
 export type UserUncheckedCreateWithoutInitiatedRefundsInput = {
@@ -1393,6 +1511,8 @@ export type UserUncheckedCreateWithoutInitiatedRefundsInput = {
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
 }
 
 export type UserCreateOrConnectWithoutInitiatedRefundsInput = {
@@ -1427,6 +1547,8 @@ export type UserUpdateWithoutInitiatedRefundsInput = {
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInitiatedRefundsInput = {
@@ -1445,6 +1567,200 @@ export type UserUncheckedUpdateWithoutInitiatedRefundsInput = {
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
   checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
+}
+
+export type UserCreateWithoutWonAuctionsInput = {
+  id?: string
+  email: string
+  passwordHash?: string | null
+  role?: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  refreshSessions?: Prisma.RefreshSessionCreateNestedManyWithoutUserInput
+  oauthAccounts?: Prisma.OAuthAccountCreateNestedManyWithoutUserInput
+  sellerApplications?: Prisma.SellerApplicationCreateNestedManyWithoutUserInput
+  reviewedSellerApplications?: Prisma.SellerApplicationCreateNestedManyWithoutReviewedByInput
+  sellerProfile?: Prisma.SellerProfileCreateNestedOneWithoutUserInput
+  moderatedProducts?: Prisma.ProductCreateNestedManyWithoutModeratedByInput
+  cart?: Prisma.CartCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
+  checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
+  initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidCreateNestedManyWithoutBidderInput
+}
+
+export type UserUncheckedCreateWithoutWonAuctionsInput = {
+  id?: string
+  email: string
+  passwordHash?: string | null
+  role?: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  refreshSessions?: Prisma.RefreshSessionUncheckedCreateNestedManyWithoutUserInput
+  oauthAccounts?: Prisma.OAuthAccountUncheckedCreateNestedManyWithoutUserInput
+  sellerApplications?: Prisma.SellerApplicationUncheckedCreateNestedManyWithoutUserInput
+  reviewedSellerApplications?: Prisma.SellerApplicationUncheckedCreateNestedManyWithoutReviewedByInput
+  sellerProfile?: Prisma.SellerProfileUncheckedCreateNestedOneWithoutUserInput
+  moderatedProducts?: Prisma.ProductUncheckedCreateNestedManyWithoutModeratedByInput
+  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
+  checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
+  initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  bids?: Prisma.BidUncheckedCreateNestedManyWithoutBidderInput
+}
+
+export type UserCreateOrConnectWithoutWonAuctionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutWonAuctionsInput, Prisma.UserUncheckedCreateWithoutWonAuctionsInput>
+}
+
+export type UserUpsertWithoutWonAuctionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutWonAuctionsInput, Prisma.UserUncheckedUpdateWithoutWonAuctionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutWonAuctionsInput, Prisma.UserUncheckedCreateWithoutWonAuctionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutWonAuctionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutWonAuctionsInput, Prisma.UserUncheckedUpdateWithoutWonAuctionsInput>
+}
+
+export type UserUpdateWithoutWonAuctionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  refreshSessions?: Prisma.RefreshSessionUpdateManyWithoutUserNestedInput
+  oauthAccounts?: Prisma.OAuthAccountUpdateManyWithoutUserNestedInput
+  sellerApplications?: Prisma.SellerApplicationUpdateManyWithoutUserNestedInput
+  reviewedSellerApplications?: Prisma.SellerApplicationUpdateManyWithoutReviewedByNestedInput
+  sellerProfile?: Prisma.SellerProfileUpdateOneWithoutUserNestedInput
+  moderatedProducts?: Prisma.ProductUpdateManyWithoutModeratedByNestedInput
+  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
+  checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
+  initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUpdateManyWithoutBidderNestedInput
+}
+
+export type UserUncheckedUpdateWithoutWonAuctionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  refreshSessions?: Prisma.RefreshSessionUncheckedUpdateManyWithoutUserNestedInput
+  oauthAccounts?: Prisma.OAuthAccountUncheckedUpdateManyWithoutUserNestedInput
+  sellerApplications?: Prisma.SellerApplicationUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSellerApplications?: Prisma.SellerApplicationUncheckedUpdateManyWithoutReviewedByNestedInput
+  sellerProfile?: Prisma.SellerProfileUncheckedUpdateOneWithoutUserNestedInput
+  moderatedProducts?: Prisma.ProductUncheckedUpdateManyWithoutModeratedByNestedInput
+  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
+  checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
+  initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  bids?: Prisma.BidUncheckedUpdateManyWithoutBidderNestedInput
+}
+
+export type UserCreateWithoutBidsInput = {
+  id?: string
+  email: string
+  passwordHash?: string | null
+  role?: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  refreshSessions?: Prisma.RefreshSessionCreateNestedManyWithoutUserInput
+  oauthAccounts?: Prisma.OAuthAccountCreateNestedManyWithoutUserInput
+  sellerApplications?: Prisma.SellerApplicationCreateNestedManyWithoutUserInput
+  reviewedSellerApplications?: Prisma.SellerApplicationCreateNestedManyWithoutReviewedByInput
+  sellerProfile?: Prisma.SellerProfileCreateNestedOneWithoutUserInput
+  moderatedProducts?: Prisma.ProductCreateNestedManyWithoutModeratedByInput
+  cart?: Prisma.CartCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderCreateNestedManyWithoutCustomerInput
+  checkoutIdempotencies?: Prisma.CheckoutIdempotencyCreateNestedManyWithoutCustomerInput
+  initiatedRefunds?: Prisma.RefundCreateNestedManyWithoutInitiatedByInput
+  wonAuctions?: Prisma.AuctionCreateNestedManyWithoutWinnerInput
+}
+
+export type UserUncheckedCreateWithoutBidsInput = {
+  id?: string
+  email: string
+  passwordHash?: string | null
+  role?: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  refreshSessions?: Prisma.RefreshSessionUncheckedCreateNestedManyWithoutUserInput
+  oauthAccounts?: Prisma.OAuthAccountUncheckedCreateNestedManyWithoutUserInput
+  sellerApplications?: Prisma.SellerApplicationUncheckedCreateNestedManyWithoutUserInput
+  reviewedSellerApplications?: Prisma.SellerApplicationUncheckedCreateNestedManyWithoutReviewedByInput
+  sellerProfile?: Prisma.SellerProfileUncheckedCreateNestedOneWithoutUserInput
+  moderatedProducts?: Prisma.ProductUncheckedCreateNestedManyWithoutModeratedByInput
+  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutCustomerInput
+  checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedCreateNestedManyWithoutCustomerInput
+  initiatedRefunds?: Prisma.RefundUncheckedCreateNestedManyWithoutInitiatedByInput
+  wonAuctions?: Prisma.AuctionUncheckedCreateNestedManyWithoutWinnerInput
+}
+
+export type UserCreateOrConnectWithoutBidsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutBidsInput, Prisma.UserUncheckedCreateWithoutBidsInput>
+}
+
+export type UserUpsertWithoutBidsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutBidsInput, Prisma.UserUncheckedUpdateWithoutBidsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutBidsInput, Prisma.UserUncheckedCreateWithoutBidsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutBidsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutBidsInput, Prisma.UserUncheckedUpdateWithoutBidsInput>
+}
+
+export type UserUpdateWithoutBidsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  refreshSessions?: Prisma.RefreshSessionUpdateManyWithoutUserNestedInput
+  oauthAccounts?: Prisma.OAuthAccountUpdateManyWithoutUserNestedInput
+  sellerApplications?: Prisma.SellerApplicationUpdateManyWithoutUserNestedInput
+  reviewedSellerApplications?: Prisma.SellerApplicationUpdateManyWithoutReviewedByNestedInput
+  sellerProfile?: Prisma.SellerProfileUpdateOneWithoutUserNestedInput
+  moderatedProducts?: Prisma.ProductUpdateManyWithoutModeratedByNestedInput
+  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutCustomerNestedInput
+  checkoutIdempotencies?: Prisma.CheckoutIdempotencyUpdateManyWithoutCustomerNestedInput
+  initiatedRefunds?: Prisma.RefundUpdateManyWithoutInitiatedByNestedInput
+  wonAuctions?: Prisma.AuctionUpdateManyWithoutWinnerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutBidsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  refreshSessions?: Prisma.RefreshSessionUncheckedUpdateManyWithoutUserNestedInput
+  oauthAccounts?: Prisma.OAuthAccountUncheckedUpdateManyWithoutUserNestedInput
+  sellerApplications?: Prisma.SellerApplicationUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSellerApplications?: Prisma.SellerApplicationUncheckedUpdateManyWithoutReviewedByNestedInput
+  sellerProfile?: Prisma.SellerProfileUncheckedUpdateOneWithoutUserNestedInput
+  moderatedProducts?: Prisma.ProductUncheckedUpdateManyWithoutModeratedByNestedInput
+  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutCustomerNestedInput
+  checkoutIdempotencies?: Prisma.CheckoutIdempotencyUncheckedUpdateManyWithoutCustomerNestedInput
+  initiatedRefunds?: Prisma.RefundUncheckedUpdateManyWithoutInitiatedByNestedInput
+  wonAuctions?: Prisma.AuctionUncheckedUpdateManyWithoutWinnerNestedInput
 }
 
 
@@ -1461,6 +1777,8 @@ export type UserCountOutputType = {
   orders: number
   checkoutIdempotencies: number
   initiatedRefunds: number
+  bids: number
+  wonAuctions: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1472,6 +1790,8 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   orders?: boolean | UserCountOutputTypeCountOrdersArgs
   checkoutIdempotencies?: boolean | UserCountOutputTypeCountCheckoutIdempotenciesArgs
   initiatedRefunds?: boolean | UserCountOutputTypeCountInitiatedRefundsArgs
+  bids?: boolean | UserCountOutputTypeCountBidsArgs
+  wonAuctions?: boolean | UserCountOutputTypeCountWonAuctionsArgs
 }
 
 /**
@@ -1540,6 +1860,20 @@ export type UserCountOutputTypeCountInitiatedRefundsArgs<ExtArgs extends runtime
   where?: Prisma.RefundWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountBidsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BidWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountWonAuctionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AuctionWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1558,6 +1892,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   orders?: boolean | Prisma.User$ordersArgs<ExtArgs>
   checkoutIdempotencies?: boolean | Prisma.User$checkoutIdempotenciesArgs<ExtArgs>
   initiatedRefunds?: boolean | Prisma.User$initiatedRefundsArgs<ExtArgs>
+  bids?: boolean | Prisma.User$bidsArgs<ExtArgs>
+  wonAuctions?: boolean | Prisma.User$wonAuctionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1600,6 +1936,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   orders?: boolean | Prisma.User$ordersArgs<ExtArgs>
   checkoutIdempotencies?: boolean | Prisma.User$checkoutIdempotenciesArgs<ExtArgs>
   initiatedRefunds?: boolean | Prisma.User$initiatedRefundsArgs<ExtArgs>
+  bids?: boolean | Prisma.User$bidsArgs<ExtArgs>
+  wonAuctions?: boolean | Prisma.User$wonAuctionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1618,6 +1956,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     orders: Prisma.$OrderPayload<ExtArgs>[]
     checkoutIdempotencies: Prisma.$CheckoutIdempotencyPayload<ExtArgs>[]
     initiatedRefunds: Prisma.$RefundPayload<ExtArgs>[]
+    bids: Prisma.$BidPayload<ExtArgs>[]
+    wonAuctions: Prisma.$AuctionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2030,6 +2370,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   orders<T extends Prisma.User$ordersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   checkoutIdempotencies<T extends Prisma.User$checkoutIdempotenciesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$checkoutIdempotenciesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CheckoutIdempotencyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   initiatedRefunds<T extends Prisma.User$initiatedRefundsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$initiatedRefundsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RefundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  bids<T extends Prisma.User$bidsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$bidsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BidPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  wonAuctions<T extends Prisma.User$wonAuctionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$wonAuctionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuctionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2685,6 +3027,54 @@ export type User$initiatedRefundsArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.RefundScalarFieldEnum | Prisma.RefundScalarFieldEnum[]
+}
+
+/**
+ * User.bids
+ */
+export type User$bidsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Bid
+   */
+  select?: Prisma.BidSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Bid
+   */
+  omit?: Prisma.BidOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BidInclude<ExtArgs> | null
+  where?: Prisma.BidWhereInput
+  orderBy?: Prisma.BidOrderByWithRelationInput | Prisma.BidOrderByWithRelationInput[]
+  cursor?: Prisma.BidWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BidScalarFieldEnum | Prisma.BidScalarFieldEnum[]
+}
+
+/**
+ * User.wonAuctions
+ */
+export type User$wonAuctionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Auction
+   */
+  select?: Prisma.AuctionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Auction
+   */
+  omit?: Prisma.AuctionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AuctionInclude<ExtArgs> | null
+  where?: Prisma.AuctionWhereInput
+  orderBy?: Prisma.AuctionOrderByWithRelationInput | Prisma.AuctionOrderByWithRelationInput[]
+  cursor?: Prisma.AuctionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AuctionScalarFieldEnum | Prisma.AuctionScalarFieldEnum[]
 }
 
 /**

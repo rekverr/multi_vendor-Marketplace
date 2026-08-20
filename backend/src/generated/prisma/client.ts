@@ -126,3 +126,13 @@ export type CheckoutIdempotency = Prisma.CheckoutIdempotencyModel
  * 
  */
 export type Refund = Prisma.RefundModel
+/**
+ * Model Auction
+ * 
+ */
+export type Auction = Prisma.AuctionModel
+/**
+ * Model Bid
+ * 
+ */
+export type Bid = Prisma.BidModel

@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
-  Equals,
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -44,14 +44,18 @@ export class CreateProductDto {
   @MaxLength(2048)
   imageUrl?: string | null;
 
-  @ApiProperty({ enum: [ProductType.FIXED_PRICE] })
-  @Equals(ProductType.FIXED_PRICE)
+  @ApiProperty({ enum: ProductType })
+  @IsEnum(ProductType)
   type!: ProductType;
 
-  @ApiProperty({ example: '149.99', description: 'Decimal monetary value' })
+  @ApiPropertyOptional({
+    example: '149.99',
+    description: 'Required only for FIXED_PRICE Products',
+  })
+  @IsOptional()
   @IsString()
   @Matches(/^(0|[1-9]\d{0,16})(\.\d{1,2})?$/)
-  price!: string;
+  price?: string;
 
   @ApiProperty({ example: 10, minimum: 0 })
   @IsInt()

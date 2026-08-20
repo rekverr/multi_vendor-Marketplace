@@ -413,7 +413,9 @@ export const ModelName = {
   OrderItem: 'OrderItem',
   FinancialLedgerEntry: 'FinancialLedgerEntry',
   CheckoutIdempotency: 'CheckoutIdempotency',
-  Refund: 'Refund'
+  Refund: 'Refund',
+  Auction: 'Auction',
+  Bid: 'Bid'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -429,7 +431,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "oAuthAccount" | "refreshSession" | "sellerApplication" | "sellerProfile" | "category" | "product" | "outboxEvent" | "processedEvent" | "cart" | "cartItem" | "order" | "sellerOrder" | "orderItem" | "financialLedgerEntry" | "checkoutIdempotency" | "refund"
+    modelProps: "user" | "oAuthAccount" | "refreshSession" | "sellerApplication" | "sellerProfile" | "category" | "product" | "outboxEvent" | "processedEvent" | "cart" | "cartItem" | "order" | "sellerOrder" | "orderItem" | "financialLedgerEntry" | "checkoutIdempotency" | "refund" | "auction" | "bid"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1691,6 +1693,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Auction: {
+      payload: Prisma.$AuctionPayload<ExtArgs>
+      fields: Prisma.AuctionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AuctionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AuctionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload>
+        }
+        findFirst: {
+          args: Prisma.AuctionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AuctionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload>
+        }
+        findMany: {
+          args: Prisma.AuctionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload>[]
+        }
+        create: {
+          args: Prisma.AuctionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload>
+        }
+        createMany: {
+          args: Prisma.AuctionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AuctionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload>[]
+        }
+        delete: {
+          args: Prisma.AuctionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload>
+        }
+        update: {
+          args: Prisma.AuctionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload>
+        }
+        deleteMany: {
+          args: Prisma.AuctionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AuctionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AuctionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload>[]
+        }
+        upsert: {
+          args: Prisma.AuctionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuctionPayload>
+        }
+        aggregate: {
+          args: Prisma.AuctionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAuction>
+        }
+        groupBy: {
+          args: Prisma.AuctionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AuctionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AuctionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AuctionCountAggregateOutputType> | number
+        }
+      }
+    }
+    Bid: {
+      payload: Prisma.$BidPayload<ExtArgs>
+      fields: Prisma.BidFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BidFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BidFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload>
+        }
+        findFirst: {
+          args: Prisma.BidFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BidFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload>
+        }
+        findMany: {
+          args: Prisma.BidFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload>[]
+        }
+        create: {
+          args: Prisma.BidCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload>
+        }
+        createMany: {
+          args: Prisma.BidCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BidCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload>[]
+        }
+        delete: {
+          args: Prisma.BidDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload>
+        }
+        update: {
+          args: Prisma.BidUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload>
+        }
+        deleteMany: {
+          args: Prisma.BidDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BidUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BidUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload>[]
+        }
+        upsert: {
+          args: Prisma.BidUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BidPayload>
+        }
+        aggregate: {
+          args: Prisma.BidAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBid>
+        }
+        groupBy: {
+          args: Prisma.BidGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BidGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BidCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BidCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1990,6 +2140,38 @@ export const RefundScalarFieldEnum = {
 export type RefundScalarFieldEnum = (typeof RefundScalarFieldEnum)[keyof typeof RefundScalarFieldEnum]
 
 
+export const AuctionScalarFieldEnum = {
+  id: 'id',
+  productId: 'productId',
+  status: 'status',
+  startingPrice: 'startingPrice',
+  minimumIncrement: 'minimumIncrement',
+  startsAt: 'startsAt',
+  endsAt: 'endsAt',
+  version: 'version',
+  currentHighestBidId: 'currentHighestBidId',
+  winnerId: 'winnerId',
+  winningPrice: 'winningPrice',
+  winnerCheckoutExpiresAt: 'winnerCheckoutExpiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AuctionScalarFieldEnum = (typeof AuctionScalarFieldEnum)[keyof typeof AuctionScalarFieldEnum]
+
+
+export const BidScalarFieldEnum = {
+  id: 'id',
+  auctionId: 'auctionId',
+  bidderId: 'bidderId',
+  amount: 'amount',
+  idempotencyKey: 'idempotencyKey',
+  createdAt: 'createdAt'
+} as const
+
+export type BidScalarFieldEnum = (typeof BidScalarFieldEnum)[keyof typeof BidScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -2261,6 +2443,20 @@ export type ListEnumCheckoutIdempotencyStatusFieldRefInput<$PrismaModel> = Field
 
 
 /**
+ * Reference to a field of type 'AuctionStatus'
+ */
+export type EnumAuctionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuctionStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'AuctionStatus[]'
+ */
+export type ListEnumAuctionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuctionStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -2441,6 +2637,8 @@ export type GlobalOmitConfig = {
   financialLedgerEntry?: Prisma.FinancialLedgerEntryOmit
   checkoutIdempotency?: Prisma.CheckoutIdempotencyOmit
   refund?: Prisma.RefundOmit
+  auction?: Prisma.AuctionOmit
+  bid?: Prisma.BidOmit
 }
 
 /* Types for Logging */

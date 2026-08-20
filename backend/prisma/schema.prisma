@@ -83,6 +83,15 @@ enum CheckoutIdempotencyStatus {
   FAILED
 }
 
+enum AuctionStatus {
+  SCHEDULED
+  ACTIVE
+  ENDED
+  SOLD
+  UNSOLD
+  CANCELLED
+}
+
 model User {
   id                         String                @id @default(uuid()) @db.Uuid
   email                      String                @unique
@@ -100,6 +109,8 @@ model User {
   orders                     Order[]
   checkoutIdempotencies      CheckoutIdempotency[]
   initiatedRefunds           Refund[]
+  bids                       Bid[]
+  wonAuctions                Auction[]             @relation("AuctionWinner")
 }
 
 model OAuthAccount {
@@ -188,6 +199,7 @@ model Product {
   moderatedBy     User?         @relation("ProductModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
   cartItems       CartItem[]
   orderItems      OrderItem[]
+  auction         Auction?
 
   @@index([sellerId, status])
   @@index([categoryId, status])
@@ -383,4 +395,44 @@ model Refund {
   @@index([orderId, createdAt])
   @@index([sellerOrderId, createdAt])
   @@index([orderItemId, createdAt])
+}
+
+model Auction {
+  id                      String        @id @default(uuid()) @db.Uuid
+  productId               String        @unique @db.Uuid
+  status                  AuctionStatus @default(SCHEDULED)
+  startingPrice           Decimal       @db.Decimal(19, 2)
+  minimumIncrement        Decimal       @db.Decimal(19, 2)
+  startsAt                DateTime
+  endsAt                  DateTime
+  version                 Int           @default(0)
+  currentHighestBidId     String?       @unique @db.Uuid
+  winnerId                String?       @db.Uuid
+  winningPrice            Decimal?      @db.Decimal(19, 2)
+  winnerCheckoutExpiresAt DateTime?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  product                 Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  bids                    Bid[]         @relation("AuctionBids")
+  currentHighestBid       Bid?          @relation("CurrentHighestBid", fields: [currentHighestBidId], references: [id], onDelete: SetNull)
+  winner                  User?         @relation("AuctionWinner", fields: [winnerId], references: [id], onDelete: Restrict)
+
+  @@index([status, startsAt])
+  @@index([status, endsAt])
+}
+
+model Bid {
+  id             String   @id @default(uuid()) @db.Uuid
+  auctionId      String   @db.Uuid
+  bidderId       String   @db.Uuid
+  amount         Decimal  @db.Decimal(19, 2)
+  idempotencyKey String
+  createdAt      DateTime @default(now())
+  auction        Auction  @relation("AuctionBids", fields: [auctionId], references: [id], onDelete: Restrict)
+  bidder         User     @relation(fields: [bidderId], references: [id], onDelete: Restrict)
+  highestFor     Auction? @relation("CurrentHighestBid")
+
+  @@unique([bidderId, idempotencyKey])
+  @@index([auctionId, createdAt])
+  @@index([auctionId, amount])
 }

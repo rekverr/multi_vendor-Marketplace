@@ -67,7 +67,9 @@ export const ModelName = {
   OrderItem: 'OrderItem',
   FinancialLedgerEntry: 'FinancialLedgerEntry',
   CheckoutIdempotency: 'CheckoutIdempotency',
-  Refund: 'Refund'
+  Refund: 'Refund',
+  Auction: 'Auction',
+  Bid: 'Bid'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -344,6 +346,38 @@ export const RefundScalarFieldEnum = {
 } as const
 
 export type RefundScalarFieldEnum = (typeof RefundScalarFieldEnum)[keyof typeof RefundScalarFieldEnum]
+
+
+export const AuctionScalarFieldEnum = {
+  id: 'id',
+  productId: 'productId',
+  status: 'status',
+  startingPrice: 'startingPrice',
+  minimumIncrement: 'minimumIncrement',
+  startsAt: 'startsAt',
+  endsAt: 'endsAt',
+  version: 'version',
+  currentHighestBidId: 'currentHighestBidId',
+  winnerId: 'winnerId',
+  winningPrice: 'winningPrice',
+  winnerCheckoutExpiresAt: 'winnerCheckoutExpiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AuctionScalarFieldEnum = (typeof AuctionScalarFieldEnum)[keyof typeof AuctionScalarFieldEnum]
+
+
+export const BidScalarFieldEnum = {
+  id: 'id',
+  auctionId: 'auctionId',
+  bidderId: 'bidderId',
+  amount: 'amount',
+  idempotencyKey: 'idempotencyKey',
+  createdAt: 'createdAt'
+} as const
+
+export type BidScalarFieldEnum = (typeof BidScalarFieldEnum)[keyof typeof BidScalarFieldEnum]
 
 
 export const SortOrder = {

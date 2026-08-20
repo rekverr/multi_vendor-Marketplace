@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -43,6 +44,7 @@ export class ProductsService {
   ) {
     const seller = await this.getApprovedSeller(user.id);
     await this.assertCategory(dto.categoryId);
+    this.assertPriceForType(dto.type, dto.price);
 
     try {
       const product = await this.prisma.$transaction(async (tx) => {
@@ -53,8 +55,11 @@ export class ProductsService {
             title: dto.title,
             description: dto.description,
             imageUrl: dto.imageUrl,
-            type: ProductType.FIXED_PRICE,
-            price: new Prisma.Decimal(dto.price),
+            type: dto.type,
+            price:
+              dto.type === ProductType.FIXED_PRICE
+                ? new Prisma.Decimal(dto.price!)
+                : null,
             stock: dto.stock,
             status: ProductStatus.DRAFT,
           },
@@ -99,6 +104,12 @@ export class ProductsService {
   ) {
     const seller = await this.getApprovedSeller(user.id);
     const product = await this.getOwnedProduct(id, seller.id);
+
+    if (product.type === ProductType.AUCTION && dto.price !== undefined) {
+      throw new BadRequestException(
+        'Auction Product price is configured through Auction',
+      );
+    }
 
     if (
       product.status !== ProductStatus.DRAFT &&
@@ -163,6 +174,18 @@ export class ProductsService {
   ) {
     const seller = await this.getApprovedSeller(user.id);
     const product = await this.getOwnedProduct(id, seller.id);
+
+    if (product.type === ProductType.AUCTION) {
+      const auction = await this.prisma.auction.findUnique({
+        where: { productId: product.id },
+        select: { id: true },
+      });
+      if (!auction) {
+        throw new ConflictException(
+          'Auction Product must be configured before publication',
+        );
+      }
+    }
 
     if (
       product.status !== ProductStatus.DRAFT &&
@@ -277,5 +300,16 @@ export class ProductsService {
     }
 
     throw error;
+  }
+
+  private assertPriceForType(type: ProductType, price?: string): void {
+    if (type === ProductType.FIXED_PRICE && price === undefined) {
+      throw new BadRequestException('FIXED_PRICE Product requires price');
+    }
+    if (type === ProductType.AUCTION && price !== undefined) {
+      throw new BadRequestException(
+        'Auction Product price is configured through Auction',
+      );
+    }
   }
 }
