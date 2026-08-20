@@ -17,14 +17,23 @@ export const envValidationSchema = Joi.object({
 
   JWT_ACCESS_TTL_SECONDS: Joi.number().integer().positive().default(900),
 
-  JWT_REFRESH_TTL_SECONDS: Joi.number()
-    .integer()
-    .positive()
-    .default(2592000),
+  JWT_REFRESH_TTL_SECONDS: Joi.number().integer().positive().default(2592000),
 
   JWT_ISSUER: Joi.string().min(1).default('marketplace-api'),
 
   JWT_AUDIENCE: Joi.string().min(1).default('marketplace-client'),
+
+  GOOGLE_OAUTH_CLIENT_ID: Joi.string().min(1).required(),
+
+  GOOGLE_OAUTH_CLIENT_SECRET: Joi.string().min(1).required(),
+
+  GOOGLE_OAUTH_REDIRECT_URI: Joi.string().uri().required(),
+
+  GOOGLE_OAUTH_STATE_TTL_SECONDS: Joi.number()
+    .integer()
+    .positive()
+    .max(900)
+    .default(600),
 
   REDIS_URL: Joi.string()
     .pattern(/^redis(s)?:\/\//)

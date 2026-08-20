@@ -18,6 +18,13 @@ export const UserRole = {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 
+export const OAuthProvider = {
+  GOOGLE: 'GOOGLE'
+} as const
+
+export type OAuthProvider = (typeof OAuthProvider)[keyof typeof OAuthProvider]
+
+
 export const SellerApplicationStatus = {
   PENDING: 'PENDING',
   APPROVED: 'APPROVED',

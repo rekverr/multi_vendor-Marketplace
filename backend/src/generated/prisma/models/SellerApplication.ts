@@ -468,10 +468,6 @@ export type EnumSellerApplicationStatusFieldUpdateOperationsInput = {
   set?: $Enums.SellerApplicationStatus
 }
 
-export type NullableStringFieldUpdateOperationsInput = {
-  set?: string | null
-}
-
 export type SellerApplicationCreateWithoutUserInput = {
   id?: string
   status?: $Enums.SellerApplicationStatus

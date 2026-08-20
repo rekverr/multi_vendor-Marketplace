@@ -5,12 +5,18 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
+import {
+  createHash,
+  randomBytes,
+  randomUUID,
+  timingSafeEqual,
+} from 'node:crypto';
 
-import { Prisma, UserRole } from '../generated/prisma/client.js';
+import { OAuthProvider, Prisma, UserRole } from '../generated/prisma/client.js';
 import { PrismaService } from '../database/prisma.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
+import type { VerifiedGoogleIdentity } from './google-oauth.client.js';
 import { PasswordHasherService } from './password-hasher.service.js';
 
 export interface PublicUser {
@@ -46,10 +52,12 @@ export class AuthService {
     configService: ConfigService,
   ) {
     this.accessSecret = configService.getOrThrow<string>('JWT_ACCESS_SECRET');
-    this.accessTtlSeconds =
-      configService.getOrThrow<number>('JWT_ACCESS_TTL_SECONDS');
-    this.refreshTtlSeconds =
-      configService.getOrThrow<number>('JWT_REFRESH_TTL_SECONDS');
+    this.accessTtlSeconds = configService.getOrThrow<number>(
+      'JWT_ACCESS_TTL_SECONDS',
+    );
+    this.refreshTtlSeconds = configService.getOrThrow<number>(
+      'JWT_REFRESH_TTL_SECONDS',
+    );
     this.issuer = configService.getOrThrow<string>('JWT_ISSUER');
     this.audience = configService.getOrThrow<string>('JWT_AUDIENCE');
   }
@@ -84,18 +92,113 @@ export class AuthService {
     const email = this.normalizeEmail(dto.email);
     const user = await this.prisma.user.findUnique({ where: { email } });
     const passwordIsValid =
-      user && (await this.passwordHasher.verify(dto.password, user.passwordHash));
+      user?.passwordHash &&
+      (await this.passwordHasher.verify(dto.password, user.passwordHash));
 
     if (!user || !passwordIsValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const tokens = await this.createTokens(user);
+    return this.createAuthResponse(user);
+  }
 
-    return {
-      user: this.toPublicUser(user),
-      ...tokens,
-    };
+  async authenticateWithGoogle(
+    identity: VerifiedGoogleIdentity,
+  ): Promise<AuthResponse> {
+    if (!identity.emailVerified) {
+      throw new UnauthorizedException('Google authentication failed');
+    }
+
+    const provider = OAuthProvider.GOOGLE;
+    const email = this.normalizeEmail(identity.email);
+    let user: PublicUser;
+
+    try {
+      user = await this.prisma.$transaction(async (transaction) => {
+        const linkedAccount = await transaction.oAuthAccount.findUnique({
+          where: {
+            provider_providerAccountId: {
+              provider,
+              providerAccountId: identity.providerAccountId,
+            },
+          },
+          include: { user: true },
+        });
+
+        if (linkedAccount) {
+          return linkedAccount.user;
+        }
+
+        let matchedUser = await transaction.user.findUnique({
+          where: { email },
+        });
+
+        if (matchedUser) {
+          const existingProviderLink =
+            await transaction.oAuthAccount.findUnique({
+              where: {
+                userId_provider: {
+                  userId: matchedUser.id,
+                  provider,
+                },
+              },
+            });
+
+          if (existingProviderLink) {
+            throw new ConflictException(
+              'Google account cannot be linked safely',
+            );
+          }
+        } else {
+          matchedUser = await transaction.user.create({
+            data: {
+              email,
+              passwordHash: null,
+              role: UserRole.CUSTOMER,
+            },
+          });
+        }
+
+        await transaction.oAuthAccount.create({
+          data: {
+            userId: matchedUser.id,
+            provider,
+            providerAccountId: identity.providerAccountId,
+          },
+        });
+
+        return matchedUser;
+      });
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        const linkedAccount = await this.prisma.oAuthAccount.findUnique({
+          where: {
+            provider_providerAccountId: {
+              provider,
+              providerAccountId: identity.providerAccountId,
+            },
+          },
+          include: { user: true },
+        });
+
+        if (linkedAccount) {
+          user = linkedAccount.user;
+        } else {
+          throw new ConflictException('Google account cannot be linked safely');
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    return this.createAuthResponse(user);
   }
 
   async refresh(rawRefreshToken: string): Promise<AuthResponse> {
@@ -164,6 +267,15 @@ export class AuthService {
       },
       data: { revokedAt: new Date() },
     });
+  }
+
+  private async createAuthResponse(user: PublicUser): Promise<AuthResponse> {
+    const tokens = await this.createTokens(user);
+
+    return {
+      user: this.toPublicUser(user),
+      ...tokens,
+    };
   }
 
   private async createTokens(user: PublicUser): Promise<AuthTokens> {

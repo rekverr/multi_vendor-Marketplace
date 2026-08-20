@@ -17,6 +17,10 @@ enum UserRole {
   ADMIN
 }
 
+enum OAuthProvider {
+  GOOGLE
+}
+
 enum SellerApplicationStatus {
   PENDING
   APPROVED
@@ -39,15 +43,30 @@ enum ProductStatus {
 model User {
   id                         String              @id @default(uuid()) @db.Uuid
   email                      String              @unique
-  passwordHash               String
+  passwordHash               String?
   role                       UserRole            @default(CUSTOMER)
   createdAt                  DateTime            @default(now())
   updatedAt                  DateTime            @updatedAt
   refreshSessions            RefreshSession[]
+  oauthAccounts              OAuthAccount[]
   sellerApplication          SellerApplication?  @relation("Applicant")
   reviewedSellerApplications SellerApplication[] @relation("ApplicationReviewer")
   sellerProfile              SellerProfile?
   moderatedProducts          Product[]           @relation("ProductModerator")
+}
+
+model OAuthAccount {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @db.Uuid
+  provider          OAuthProvider
+  providerAccountId String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
+  @@index([userId])
 }
 
 model RefreshSession {
