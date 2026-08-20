@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import {
-  collectDefaultMetrics,
-  Registry,
-} from 'prom-client';
+import { collectDefaultMetrics, Counter, Gauge, Registry } from 'prom-client';
 
 @Injectable()
 export class MetricsService {
   private readonly registry: Registry;
+  private readonly queueProcessedTotal: Counter<'queue'>;
+  private readonly queueFailedTotal: Counter<'queue'>;
+  private readonly outboxPublishFailedTotal: Counter;
+  private readonly outboxBacklog: Gauge;
 
   constructor() {
     this.registry = new Registry();
@@ -15,6 +16,45 @@ export class MetricsService {
       register: this.registry,
       prefix: 'marketplace_',
     });
+
+    this.queueProcessedTotal = new Counter({
+      name: 'marketplace_queue_jobs_processed_total',
+      help: 'Number of successfully processed queue jobs',
+      labelNames: ['queue'],
+      registers: [this.registry],
+    });
+    this.queueFailedTotal = new Counter({
+      name: 'marketplace_queue_jobs_failed_total',
+      help: 'Number of queue jobs that exhausted an attempt',
+      labelNames: ['queue'],
+      registers: [this.registry],
+    });
+    this.outboxPublishFailedTotal = new Counter({
+      name: 'marketplace_outbox_publish_failed_total',
+      help: 'Number of failed Outbox publication attempts',
+      registers: [this.registry],
+    });
+    this.outboxBacklog = new Gauge({
+      name: 'marketplace_outbox_unpublished_events',
+      help: 'Current number of unpublished Outbox events',
+      registers: [this.registry],
+    });
+  }
+
+  recordQueueProcessed(queue: string): void {
+    this.queueProcessedTotal.inc({ queue });
+  }
+
+  recordQueueFailed(queue: string): void {
+    this.queueFailedTotal.inc({ queue });
+  }
+
+  recordOutboxPublishFailure(): void {
+    this.outboxPublishFailedTotal.inc();
+  }
+
+  setOutboxBacklog(value: number): void {
+    this.outboxBacklog.set(value);
   }
 
   get contentType(): string {

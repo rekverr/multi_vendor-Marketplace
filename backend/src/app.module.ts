@@ -8,6 +8,7 @@ import { envValidationSchema } from './config/env.validation.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
 import { MetricsModule } from './metrics/metrics.module.js';
+import { OutboxModule } from './outbox/outbox.module.js';
 import { ProductsModule } from './products/products.module.js';
 import { SellersModule } from './sellers/sellers.module.js';
 
@@ -29,6 +30,7 @@ import { SellersModule } from './sellers/sellers.module.js';
     SellersModule,
     HealthModule,
     MetricsModule,
+    OutboxModule,
   ],
 })
 export class AppModule implements NestModule {

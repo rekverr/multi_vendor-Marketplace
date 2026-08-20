@@ -143,3 +143,35 @@ model Product {
   @@index([categoryId, status])
   @@index([status, type])
 }
+
+model OutboxEvent {
+  id            String    @id @default(uuid()) @db.Uuid
+  eventId       String    @unique @default(uuid()) @db.Uuid
+  eventType     String
+  aggregateType String
+  aggregateId   String    @db.Uuid
+  occurredAt    DateTime  @default(now())
+  correlationId String    @db.Uuid
+  schemaVersion Int       @default(1)
+  payload       Json
+  publishedAt   DateTime?
+  attemptCount  Int       @default(0)
+  lastError     String?
+  nextAttemptAt DateTime  @default(now())
+  lockedAt      DateTime?
+  lockedUntil   DateTime?
+  lockedBy      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([publishedAt, nextAttemptAt, occurredAt])
+  @@index([lockedUntil])
+}
+
+model ProcessedEvent {
+  consumerName String
+  eventId      String   @db.Uuid
+  processedAt  DateTime @default(now())
+
+  @@id([consumerName, eventId])
+}

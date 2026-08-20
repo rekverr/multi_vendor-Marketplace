@@ -39,6 +39,17 @@ export const envValidationSchema = Joi.object({
     .pattern(/^redis(s)?:\/\//)
     .required(),
 
+  OUTBOX_POLL_INTERVAL_MS: Joi.number().integer().min(100).default(1000),
+
+  OUTBOX_BATCH_SIZE: Joi.number().integer().positive().max(100).default(25),
+
+  OUTBOX_LEASE_MS: Joi.number().integer().min(1000).default(30000),
+
+  OUTBOX_PUBLISHER_ENABLED: Joi.boolean()
+    .truthy('true')
+    .falsy('false')
+    .default(true),
+
   MEILI_HOST: Joi.string().uri().required(),
 
   MEILI_MASTER_KEY: Joi.string().min(8).required(),
