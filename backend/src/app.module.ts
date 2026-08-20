@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+import { AuthModule } from './auth/auth.module.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
 import { envValidationSchema } from './config/env.validation.js';
 import { DatabaseModule } from './database/database.module.js';
@@ -23,6 +24,7 @@ import { MetricsModule } from './metrics/metrics.module.js';
     }),
 
     DatabaseModule,
+    AuthModule,
     HealthModule,
     MetricsModule,
   ],
