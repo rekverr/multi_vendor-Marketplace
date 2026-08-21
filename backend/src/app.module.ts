@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+import { AnalyticsModule } from './analytics/analytics.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { AuctionsModule } from './auctions/auctions.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
@@ -31,6 +32,7 @@ import { SearchModule } from './search/search.module.js';
       },
     }),
 
+    AnalyticsModule,
     DatabaseModule,
     DisputesModule,
     CacheModule,
