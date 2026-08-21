@@ -38,6 +38,12 @@ const publicProductSelect = {
       displayName: true,
     },
   },
+  auction: {
+    select: {
+      id: true,
+      status: true,
+    },
+  },
 } satisfies Prisma.ProductSelect;
 
 @Injectable()

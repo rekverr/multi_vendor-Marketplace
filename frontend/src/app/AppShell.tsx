@@ -9,6 +9,7 @@ export function AppShell() {
         <NavLink className="brand" to="/"><span className="brand-mark">M</span><span>Marketline</span></NavLink>
         <nav aria-label="Main navigation">
           <NavLink to="/">Home</NavLink>
+          <NavLink to="/products">Catalog</NavLink>
           {auth.status === 'authenticated' ? <>
             <NavLink to="/account">Account</NavLink>
             {auth.hasRole('SELLER') && <NavLink to="/seller">Seller</NavLink>}

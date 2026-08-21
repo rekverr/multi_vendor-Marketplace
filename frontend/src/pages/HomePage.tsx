@@ -10,7 +10,7 @@ export function HomePage() {
         <p>A reliable marketplace foundation for products, auctions, orders, and independent sellers.</p>
         <div className="home-actions">
           <Link className="button button-primary" to={auth.user ? '/account' : '/register'}>{auth.user ? 'Open account' : 'Create account'}</Link>
-          <Link className="button button-secondary" to="/login">Sign in</Link>
+          <Link className="button button-secondary" to="/products">Browse catalog</Link>
         </div>
       </section>
       <aside className="home-orbit" aria-label="Marketplace capabilities">

@@ -3,6 +3,9 @@ import { GoogleCallbackPage } from '../features/auth/GoogleCallbackPage'
 import { LoginPage } from '../features/auth/LoginPage'
 import { ProtectedRoute } from '../features/auth/ProtectedRoute'
 import { RegisterPage } from '../features/auth/RegisterPage'
+import { AuctionDetailPage } from '../features/auctions/AuctionDetailPage'
+import { CatalogPage } from '../features/catalog/CatalogPage'
+import { ProductDetailPage } from '../features/catalog/ProductDetailPage'
 import { AccountPage } from '../pages/AccountPage'
 import { HomePage } from '../pages/HomePage'
 import { RoleLandingPage } from '../pages/RoleLandingPage'
@@ -13,6 +16,9 @@ export const router = createBrowserRouter([{
   element: <AppRoot />,
   children: [
     { path: '/', element: <HomePage /> },
+    { path: '/products', element: <CatalogPage /> },
+    { path: '/products/:productId', element: <ProductDetailPage /> },
+    { path: '/auctions/:auctionId', element: <AuctionDetailPage /> },
     { path: '/login', element: <LoginPage /> },
     { path: '/register', element: <RegisterPage /> },
     { path: '/auth/google/callback', element: <GoogleCallbackPage /> },
