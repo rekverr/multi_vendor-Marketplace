@@ -203,7 +203,7 @@ describe('JWT access and Google OAuth2 (e2e)', () => {
     const startResponse = await request(app.getHttpServer())
       .get('/auth/google')
       .expect(302);
-    const authorizationUrl = new URL(startResponse.headers.location as string);
+    const authorizationUrl = new URL(startResponse.headers.location);
     const state = authorizationUrl.searchParams.get('state');
     const setCookie = startResponse.headers['set-cookie'];
     const cookie = Array.isArray(setCookie) ? setCookie[0] : setCookie;

@@ -27,9 +27,7 @@ export function configureApp(app: INestApplication): void {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Multi-Vendor Marketplace API')
-    .setDescription(
-      'API for Multi-Vendor Marketplace + Real-Time Inventory',
-    )
+    .setDescription('API for Multi-Vendor Marketplace + Real-Time Inventory')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

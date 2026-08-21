@@ -41,11 +41,15 @@ describe('Backend foundation (e2e)', () => {
       .expect(200)
       .expect('Content-Type', /text\/plain/);
 
-    expect(response.text).toContain('# HELP marketplace_process_cpu_user_seconds_total');
+    expect(response.text).toContain(
+      '# HELP marketplace_process_cpu_user_seconds_total',
+    );
   });
 
   it('GET /docs serves Swagger UI', async () => {
-    const response = await request(app.getHttpServer()).get('/docs').expect(200);
+    const response = await request(app.getHttpServer())
+      .get('/docs')
+      .expect(200);
 
     expect(response.text).toContain('Swagger UI');
   });
