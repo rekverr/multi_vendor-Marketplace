@@ -9,6 +9,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { trimString } from '../../common/transforms.js';
 
 export class UpdateReviewDto {
   @ApiPropertyOptional({ minimum: 1, maximum: 5 })
@@ -20,7 +21,7 @@ export class UpdateReviewDto {
 
   @ApiPropertyOptional({ minLength: 1, maxLength: 2000 })
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trimString)
   @IsString()
   @MinLength(1)
   @MaxLength(2000)

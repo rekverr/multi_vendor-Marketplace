@@ -51,9 +51,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
         message = body.message ?? exception.message;
 
-        code =
-          body.code ??
-          (status === HttpStatus.BAD_REQUEST ? 'BAD_REQUEST' : 'HTTP_ERROR');
+        code = body.code ?? (status === 400 ? 'BAD_REQUEST' : 'HTTP_ERROR');
 
         if (Array.isArray(body.message)) {
           details = body.message;

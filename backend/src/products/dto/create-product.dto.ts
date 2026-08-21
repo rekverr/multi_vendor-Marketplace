@@ -15,6 +15,7 @@ import {
 } from 'class-validator';
 
 import { ProductType } from '../../generated/prisma/client.js';
+import { trimString } from '../../common/transforms.js';
 
 export class CreateProductDto {
   @ApiProperty({ format: 'uuid' })
@@ -22,14 +23,14 @@ export class CreateProductDto {
   categoryId!: string;
 
   @ApiProperty({ example: 'Mechanical Keyboard', maxLength: 200 })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trimString)
   @IsString()
   @MinLength(2)
   @MaxLength(200)
   title!: string;
 
   @ApiProperty({ example: 'Hot-swappable mechanical keyboard.' })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trimString)
   @IsString()
   @MinLength(1)
   @MaxLength(5000)

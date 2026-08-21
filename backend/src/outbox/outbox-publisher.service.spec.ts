@@ -22,11 +22,9 @@ describe('OutboxPublisherService', () => {
     expect(queue.publish.mock.invocationCallOrder[0]).toBeLessThan(
       prisma.outboxEvent.updateMany.mock.invocationCallOrder[0],
     );
-    expect(prisma.outboxEvent.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ publishedAt: expect.any(Date) }),
-      }),
-    );
+    const publishUpdate: unknown =
+      prisma.outboxEvent.updateMany.mock.calls[0]?.[0];
+    expect(updateData(publishUpdate).publishedAt).toBeInstanceOf(Date);
   });
 
   it('keeps a failed event unpublished and schedules a retry', async () => {
@@ -36,18 +34,16 @@ describe('OutboxPublisherService', () => {
 
     await expect(publisher.publishPending()).resolves.toBe(1);
 
-    expect(prisma.outboxEvent.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          lastError: 'Redis unavailable',
-          nextAttemptAt: expect.any(Date),
-          lockedBy: null,
-        }),
-      }),
-    );
-    expect(
-      prisma.outboxEvent.updateMany.mock.calls[0][0].data,
-    ).not.toHaveProperty('publishedAt');
+    const retryUpdate: unknown =
+      prisma.outboxEvent.updateMany.mock.calls[0]?.[0];
+    expect(retryUpdate).toMatchObject({
+      data: {
+        lastError: 'Redis unavailable',
+        lockedBy: null,
+      },
+    });
+    expect(updateData(retryUpdate).nextAttemptAt).toBeInstanceOf(Date);
+    expect(retryUpdate).not.toHaveProperty('data.publishedAt');
     expect(metrics.recordOutboxPublishFailure).toHaveBeenCalledTimes(1);
   });
 
@@ -64,9 +60,9 @@ describe('OutboxPublisherService', () => {
 
     expect(queue.publish).toHaveBeenCalledTimes(2);
     expect(prisma.outboxEvent.updateMany).toHaveBeenCalledTimes(2);
-    expect(
-      prisma.outboxEvent.updateMany.mock.calls[1][0].data.publishedAt,
-    ).toEqual(expect.any(Date));
+    const successfulUpdate: unknown =
+      prisma.outboxEvent.updateMany.mock.calls[1]?.[0];
+    expect(updateData(successfulUpdate).publishedAt).toBeInstanceOf(Date);
   });
 });
 
@@ -126,4 +122,15 @@ function outboxEvent(overrides: Partial<OutboxEvent> = {}): OutboxEvent {
     updatedAt: now,
     ...overrides,
   };
+}
+
+function updateData(value: unknown): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || !('data' in value)) {
+    throw new TypeError('Expected an update query');
+  }
+  const data: unknown = value.data;
+  if (typeof data !== 'object' || data === null) {
+    throw new TypeError('Expected update data');
+  }
+  return data as Record<string, unknown>;
 }

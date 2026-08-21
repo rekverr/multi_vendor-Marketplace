@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 import { PrismaService } from '../src/database/prisma.service.js';
 import { UserRole } from '../src/generated/prisma/client.js';
+import { bodyOf, type ApiResponseBody } from './helpers/http-response.js';
 
 const PASSWORD = 'correct-horse-battery-staple';
 const TEST_PREFIX = `catalog-management-${process.pid}`;
@@ -51,25 +52,25 @@ describe('Category and Seller Product management (e2e)', () => {
       .send({ name: `  ${TEST_PREFIX} Electronics  ` })
       .expect(201);
 
-    expect(created.body.name).toBe(`${TEST_PREFIX} Electronics`);
+    expect(bodyOf(created).name).toBe(`${TEST_PREFIX} Electronics`);
 
     const list = await request(app.getHttpServer())
       .get('/categories')
       .expect(200);
-    expect(list.body).toEqual(
+    expect(bodyOf<ApiResponseBody[]>(list)).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: created.body.id }),
+        expect.objectContaining({ id: bodyOf(created).id }),
       ]),
     );
 
     await request(app.getHttpServer())
-      .patch(`/categories/${created.body.id}`)
+      .patch(`/categories/${bodyOf(created).id}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ name: `${TEST_PREFIX} Keyboards` })
       .expect(200);
 
     await request(app.getHttpServer())
-      .delete(`/categories/${created.body.id}`)
+      .delete(`/categories/${bodyOf(created).id}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(204);
   });
@@ -93,13 +94,13 @@ describe('Category and Seller Product management (e2e)', () => {
       .get('/seller/products')
       .set('Authorization', `Bearer ${sellerAToken}`)
       .expect(200);
-    expect(sellerAList.body).toHaveLength(1);
+    expect(bodyOf<ApiResponseBody[]>(sellerAList)).toHaveLength(1);
 
     const sellerBList = await request(app.getHttpServer())
       .get('/seller/products')
       .set('Authorization', `Bearer ${sellerBToken}`)
       .expect(200);
-    expect(sellerBList.body).toHaveLength(0);
+    expect(bodyOf<ApiResponseBody[]>(sellerBList)).toHaveLength(0);
 
     await request(app.getHttpServer())
       .get(`/seller/products/${product.id}`)
@@ -203,7 +204,9 @@ describe('Category and Seller Product management (e2e)', () => {
       .send({ ...productPayload(category.id), type: 'AUCTION' })
       .expect(400);
 
-    const { price: _price, ...fixedWithoutPrice } = productPayload(category.id);
+    const fixedWithoutPrice: Partial<ReturnType<typeof productPayload>> =
+      productPayload(category.id);
+    delete fixedWithoutPrice.price;
     await request(app.getHttpServer())
       .post('/seller/products')
       .set('Authorization', `Bearer ${sellerToken}`)
@@ -228,13 +231,13 @@ describe('Category and Seller Product management (e2e)', () => {
       .set('Authorization', `Bearer ${sellerToken}`)
       .send({ price: '24.50', stock: 3 })
       .expect(200);
-    expect(Number(updated.body.price)).toBe(24.5);
+    expect(Number(bodyOf(updated).price)).toBe(24.5);
 
     const publication = await request(app.getHttpServer())
       .patch(`/seller/products/${product.id}/request-publication`)
       .set('Authorization', `Bearer ${sellerToken}`)
       .expect(200);
-    expect(publication.body.status).toBe('PENDING_REVIEW');
+    expect(bodyOf(publication).status).toBe('PENDING_REVIEW');
 
     await request(app.getHttpServer())
       .patch(`/seller/products/${product.id}`)
@@ -251,7 +254,7 @@ describe('Category and Seller Product management (e2e)', () => {
       .delete(`/seller/products/${product.id}`)
       .set('Authorization', `Bearer ${sellerToken}`)
       .expect(200);
-    expect(archived.body.status).toBe('ARCHIVED');
+    expect(bodyOf(archived).status).toBe('ARCHIVED');
 
     await request(app.getHttpServer())
       .patch(`/seller/products/${product.id}/request-publication`)
@@ -299,7 +302,7 @@ describe('Category and Seller Product management (e2e)', () => {
       .send({ email, password: PASSWORD })
       .expect(200);
 
-    return login.body.accessToken as string;
+    return bodyOf(login).accessToken;
   }
 
   async function createAdminAndLogin(): Promise<string> {
@@ -314,7 +317,7 @@ describe('Category and Seller Product management (e2e)', () => {
       .send({ email: ADMIN_EMAIL, password: PASSWORD })
       .expect(200);
 
-    return login.body.accessToken as string;
+    return bodyOf(login).accessToken;
   }
 
   async function createApprovedSeller(
@@ -330,7 +333,7 @@ describe('Category and Seller Product management (e2e)', () => {
       .expect(201);
 
     await request(app.getHttpServer())
-      .patch(`/seller-applications/${application.body.id}/approve`)
+      .patch(`/seller-applications/${bodyOf(application).id}/approve`)
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
@@ -344,7 +347,7 @@ describe('Category and Seller Product management (e2e)', () => {
       .send({ name: `${TEST_PREFIX} ${suffix}` })
       .expect(201);
 
-    return response.body as { id: string; name: string };
+    return bodyOf<{ id: string; name: string }>(response);
   }
 
   async function createProduct(sellerToken: string, categoryId: string) {
@@ -354,7 +357,7 @@ describe('Category and Seller Product management (e2e)', () => {
       .send(productPayload(categoryId))
       .expect(201);
 
-    return response.body as { id: string; status: string };
+    return bodyOf<{ id: string; status: string }>(response);
   }
 
   function productPayload(categoryId: string) {

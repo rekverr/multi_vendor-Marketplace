@@ -6,6 +6,7 @@ import type { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 import { PrismaService } from '../src/database/prisma.service.js';
+import { bodyOf } from './helpers/http-response.js';
 import {
   ProductStatus,
   ProductType,
@@ -57,7 +58,7 @@ describe('Customer cart (e2e)', () => {
       .get('/cart')
       .set('Authorization', `Bearer ${customerBToken}`)
       .expect(200);
-    expect(otherCart.body.items).toHaveLength(0);
+    expect(bodyOf(otherCart).items).toHaveLength(0);
 
     await request(app.getHttpServer())
       .patch(`/cart/items/${availableProductId}`)
@@ -94,7 +95,7 @@ describe('Customer cart (e2e)', () => {
         userId: randomUUID(),
       })
       .expect(201);
-    expect(added.body.items[0]).toMatchObject({
+    expect(bodyOf(added).items[0]).toMatchObject({
       quantity: 2,
       lineTotal: '39.98',
       purchasable: true,
@@ -110,13 +111,13 @@ describe('Customer cart (e2e)', () => {
       .set('Authorization', `Bearer ${customerAToken}`)
       .send({ quantity: 3 })
       .expect(200);
-    expect(updated.body.items[0].quantity).toBe(3);
+    expect(bodyOf(updated).items[0].quantity).toBe(3);
 
     const removed = await request(app.getHttpServer())
       .delete(`/cart/items/${availableProductId}`)
       .set('Authorization', `Bearer ${customerAToken}`)
       .expect(200);
-    expect(removed.body.items).toHaveLength(0);
+    expect(bodyOf(removed).items).toHaveLength(0);
 
     await request(app.getHttpServer())
       .post('/cart/items')
@@ -131,7 +132,7 @@ describe('Customer cart (e2e)', () => {
       .get('/cart')
       .set('Authorization', `Bearer ${customerAToken}`)
       .expect(200);
-    expect(cleared.body.items).toHaveLength(0);
+    expect(bodyOf(cleared).items).toHaveLength(0);
   });
 
   it('merges duplicate Product adds into one CartItem', async () => {
@@ -147,8 +148,8 @@ describe('Customer cart (e2e)', () => {
       .get('/cart')
       .set('Authorization', `Bearer ${customerAToken}`)
       .expect(200);
-    expect(cart.body.items).toHaveLength(1);
-    expect(cart.body.items[0].quantity).toBe(3);
+    expect(bodyOf(cart).items).toHaveLength(1);
+    expect(bodyOf(cart).items[0].quantity).toBe(3);
     expect(
       await prisma.cartItem.count({ where: { productId: availableProductId } }),
     ).toBe(1);
@@ -250,7 +251,7 @@ describe('Customer cart (e2e)', () => {
       .post('/auth/login')
       .send({ email, password: PASSWORD })
       .expect(200);
-    return response.body.accessToken as string;
+    return bodyOf(response).accessToken;
   }
 
   function cleanup() {

@@ -7,6 +7,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { trimString } from '../../common/transforms.js';
 
 export class CreateDisputeDto {
   @ApiProperty({ format: 'uuid' })
@@ -19,7 +20,7 @@ export class CreateDisputeDto {
   orderItemId?: string;
 
   @ApiProperty({ minLength: 10, maxLength: 2000 })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trimString)
   @IsString()
   @MinLength(10)
   @MaxLength(2000)

@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import type { Response as SupertestResponse } from 'supertest';
+import { bodyOf } from './helpers/http-response.js';
 import type { App } from 'supertest/types.js';
 
 import { AppModule } from '../src/app.module.js';
@@ -70,14 +71,14 @@ describe('JWT access and Google OAuth2 (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .get('/auth/me')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${bodyOf(loginResponse).accessToken}`)
       .expect(200);
 
-    expect(response.body).toMatchObject({
+    expect(bodyOf(response)).toMatchObject({
       email: LINK_EMAIL,
       role: 'CUSTOMER',
     });
-    expect(response.body).not.toHaveProperty('passwordHash');
+    expect(bodyOf(response)).not.toHaveProperty('passwordHash');
   });
 
   it('rejects an invalid access JWT', async () => {
@@ -96,12 +97,12 @@ describe('JWT access and Google OAuth2 (e2e)', () => {
 
     const response = await completeGoogleLogin('new-user-code');
 
-    expect(response.body.user).toMatchObject({
+    expect(bodyOf(response).user).toMatchObject({
       email: NEW_GOOGLE_EMAIL,
       role: 'CUSTOMER',
     });
-    expect(response.body.accessToken).toEqual(expect.any(String));
-    expect(response.body.refreshToken).toEqual(expect.any(String));
+    expect(bodyOf(response).accessToken).toEqual(expect.any(String));
+    expect(bodyOf(response).refreshToken).toEqual(expect.any(String));
 
     const storedUser = await prisma.user.findUniqueOrThrow({
       where: { email: NEW_GOOGLE_EMAIL },
@@ -124,7 +125,7 @@ describe('JWT access and Google OAuth2 (e2e)', () => {
     const firstLogin = await completeGoogleLogin('linked-user-code');
     const secondLogin = await completeGoogleLogin('linked-user-code');
 
-    expect(secondLogin.body.user.id).toBe(firstLogin.body.user.id);
+    expect(bodyOf(secondLogin).user.id).toBe(bodyOf(firstLogin).user.id);
     expect(
       await prisma.user.count({ where: { email: NEW_GOOGLE_EMAIL } }),
     ).toBe(1);
@@ -145,7 +146,7 @@ describe('JWT access and Google OAuth2 (e2e)', () => {
 
     const googleLogin = await completeGoogleLogin('account-link-code');
 
-    expect(googleLogin.body.user.id).toBe(registration.body.user.id);
+    expect(bodyOf(googleLogin).user.id).toBe(bodyOf(registration).user.id);
 
     const storedUser = await prisma.user.findUniqueOrThrow({
       where: { email: LINK_EMAIL },
@@ -205,15 +206,17 @@ describe('JWT access and Google OAuth2 (e2e)', () => {
       .expect(302);
     const authorizationUrl = new URL(startResponse.headers.location);
     const state = authorizationUrl.searchParams.get('state');
-    const setCookie = startResponse.headers['set-cookie'];
-    const cookie = Array.isArray(setCookie) ? setCookie[0] : setCookie;
+    const setCookie: unknown = startResponse.headers['set-cookie'];
+    const cookie = Array.isArray(setCookie)
+      ? (setCookie[0] as unknown)
+      : setCookie;
 
     expect(state).toEqual(expect.any(String));
     expect(cookie).toEqual(expect.any(String));
 
     return request(app.getHttpServer())
       .get('/auth/google/callback')
-      .set('Cookie', (cookie as string).split(';')[0])
+      .set('Cookie', typeof cookie === 'string' ? cookie.split(';')[0] : '')
       .query({ code, state })
       .expect(expectedStatus);
   }

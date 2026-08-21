@@ -6,6 +6,7 @@ import type { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 import { PrismaService } from '../src/database/prisma.service.js';
+import { bodyOf } from './helpers/http-response.js';
 import {
   LedgerAccount,
   ProductStatus,
@@ -55,9 +56,12 @@ describe('Customer checkout (e2e)', () => {
       .send({})
       .expect(201);
 
-    expect(response.body).toMatchObject({ totalAmount: '40', currency: 'USD' });
-    expect(response.body.sellerOrders).toHaveLength(2);
-    for (const sellerOrder of response.body.sellerOrders) {
+    expect(bodyOf(response)).toMatchObject({
+      totalAmount: '40',
+      currency: 'USD',
+    });
+    expect(bodyOf(response).sellerOrders).toHaveLength(2);
+    for (const sellerOrder of bodyOf(response).sellerOrders) {
       expect(sellerOrder).toMatchObject({
         grossAmount: '20',
         commissionRate: '0.1',
@@ -68,7 +72,7 @@ describe('Customer checkout (e2e)', () => {
     }
 
     const order = await prisma.order.findUniqueOrThrow({
-      where: { id: response.body.id as string },
+      where: { id: bodyOf(response).id },
       include: {
         sellerOrders: { include: { items: true, ledgerEntries: true } },
       },
@@ -158,7 +162,7 @@ describe('Customer checkout (e2e)', () => {
       .send({ requestContext: 'cart-submit-1' })
       .expect(201);
 
-    expect(retry.body.id).toBe(first.body.id);
+    expect(bodyOf(retry).id).toBe(bodyOf(first).id);
     expect(
       await prisma.order.count({ where: { customerId: customer.userId } }),
     ).toBe(1);
@@ -199,7 +203,7 @@ describe('Customer checkout (e2e)', () => {
       .send({ requestContext: 'cart-state-b' })
       .expect(409);
 
-    expect(conflict.body.message).toBe(
+    expect(bodyOf(conflict).message).toBe(
       'Idempotency key was used for another request',
     );
     expect(
@@ -212,7 +216,7 @@ describe('Customer checkout (e2e)', () => {
         })
       ).stock,
     ).toBe(1);
-    expect(first.body.id).toBeDefined();
+    expect(bodyOf(first).id).toBeDefined();
   });
 
   it('allows exactly one of two concurrent Customers to consume stock 1', async () => {
@@ -329,8 +333,8 @@ describe('Customer checkout (e2e)', () => {
       .send({ email, password: PASSWORD })
       .expect(200);
     return {
-      userId: registration.body.user.id as string,
-      token: login.body.accessToken as string,
+      userId: bodyOf(registration).user.id,
+      token: bodyOf(login).accessToken,
     };
   }
 

@@ -6,6 +6,7 @@ import type { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 import { PrismaService } from '../src/database/prisma.service.js';
+import { bodyOf } from './helpers/http-response.js';
 import {
   ProductStatus,
   ProductType,
@@ -39,8 +40,8 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .get('/seller/orders')
       .set('Authorization', `Bearer ${fixture.firstSeller.token}`)
       .expect(200);
-    expect(sellerList.body.total).toBe(1);
-    expect(sellerList.body.items[0].id).toBe(fixture.firstSellerOrderId);
+    expect(bodyOf(sellerList).total).toBe(1);
+    expect(bodyOf(sellerList).items[0].id).toBe(fixture.firstSellerOrderId);
 
     await request(app.getHttpServer())
       .get(`/seller/orders/${fixture.firstSellerOrderId}`)
@@ -56,8 +57,8 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .get('/orders')
       .set('Authorization', `Bearer ${fixture.customer.token}`)
       .expect(200);
-    expect(customerList.body.total).toBe(1);
-    expect(customerList.body.items[0].sellerOrders).toHaveLength(2);
+    expect(bodyOf(customerList).total).toBe(1);
+    expect(bodyOf(customerList).items[0].sellerOrders).toHaveLength(2);
 
     await request(app.getHttpServer())
       .get(`/orders/${fixture.orderId}`)
@@ -112,10 +113,10 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .get(`/orders/${fixture.orderId}`)
       .set('Authorization', `Bearer ${fixture.customer.token}`)
       .expect(200);
-    expect(customerOrder.body.status).toBe('COMPLETED');
+    expect(bodyOf(customerOrder).status).toBe('COMPLETED');
     expect(
-      customerOrder.body.sellerOrders.map(
-        (sellerOrder: { status: string }) => sellerOrder.status,
+      bodyOf(customerOrder).sellerOrders.map(
+        (sellerOrder) => sellerOrder.status,
       ),
     ).toEqual(['COMPLETED', 'COMPLETED']);
 
@@ -191,8 +192,8 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .set('X-Correlation-Id', randomUUID())
       .send({})
       .expect(201);
-    expect(cancelled.body.status).toBe(SellerOrderStatus.CANCELLED);
-    expect(cancelled.body.orderStatus).toBe('PARTIALLY_CANCELLED');
+    expect(bodyOf(cancelled).status).toBe(SellerOrderStatus.CANCELLED);
+    expect(bodyOf(cancelled).orderStatus).toBe('PARTIALLY_CANCELLED');
 
     const retry = await request(app.getHttpServer())
       .post(
@@ -201,7 +202,7 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .set('Authorization', `Bearer ${fixture.customer.token}`)
       .send({})
       .expect(201);
-    expect(retry.body.status).toBe(SellerOrderStatus.CANCELLED);
+    expect(bodyOf(retry).status).toBe(SellerOrderStatus.CANCELLED);
 
     expect(
       (
@@ -271,11 +272,9 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .set('X-Correlation-Id', randomUUID())
       .send({})
       .expect(201);
-    expect(first.body.status).toBe('CANCELLED');
+    expect(bodyOf(first).status).toBe('CANCELLED');
     expect(
-      first.body.sellerOrders.map(
-        (sellerOrder: { status: string }) => sellerOrder.status,
-      ),
+      bodyOf(first).sellerOrders.map((sellerOrder) => sellerOrder.status),
     ).toEqual(['CANCELLED', 'CANCELLED']);
 
     await request(app.getHttpServer())
@@ -350,7 +349,7 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .set(headers)
       .send({ quantity: 1, reason: 'Damaged item' })
       .expect(201);
-    expect(first.body).toMatchObject({
+    expect(bodyOf(first)).toMatchObject({
       quantity: 1,
       amount: '10',
       commissionAmount: '1',
@@ -364,7 +363,7 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .set(headers)
       .send({ quantity: 1, reason: 'Damaged item' })
       .expect(201);
-    expect(retry.body.id).toBe(first.body.id);
+    expect(bodyOf(retry).id).toBe(bodyOf(first).id);
 
     await request(app.getHttpServer())
       .post(
@@ -421,7 +420,7 @@ describe('SellerOrder lifecycle (e2e)', () => {
     ]);
     expect(
       await prisma.outboxEvent.count({
-        where: { aggregateId: first.body.id, eventType: 'REFUND_CREATED' },
+        where: { aggregateId: bodyOf(first).id, eventType: 'REFUND_CREATED' },
       }),
     ).toBe(1);
   });
@@ -458,8 +457,8 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .set('X-Correlation-Id', randomUUID())
       .send({ status })
       .expect(200);
-    expect(response.body.status).toBe(status);
-    expect(response.body.orderStatus).toBe(expectedOrderStatus);
+    expect(bodyOf(response).status).toBe(status);
+    expect(bodyOf(response).orderStatus).toBe(expectedOrderStatus);
   }
 
   async function seedOrder(suffix: string) {
@@ -491,23 +490,24 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .set('Idempotency-Key', `${suffix}-lifecycle-checkout`)
       .send({ requestContext: suffix })
       .expect(201);
-    const firstSellerOrder = checkout.body.sellerOrders.find(
-      (sellerOrder: { sellerId: string }) =>
-        sellerOrder.sellerId === firstSeller.sellerId,
+    const firstSellerOrder = bodyOf(checkout).sellerOrders.find(
+      (sellerOrder) => sellerOrder.sellerId === firstSeller.sellerId,
     );
-    const secondSellerOrder = checkout.body.sellerOrders.find(
-      (sellerOrder: { sellerId: string }) =>
-        sellerOrder.sellerId === secondSeller.sellerId,
+    const secondSellerOrder = bodyOf(checkout).sellerOrders.find(
+      (sellerOrder) => sellerOrder.sellerId === secondSeller.sellerId,
     );
+    if (!firstSellerOrder || !secondSellerOrder) {
+      throw new Error('Checkout SellerOrders were not returned');
+    }
     return {
       customer,
       otherCustomer,
       firstSeller,
       secondSeller,
-      orderId: checkout.body.id as string,
-      firstSellerOrderId: firstSellerOrder.id as string,
-      secondSellerOrderId: secondSellerOrder.id as string,
-      firstItemId: firstSellerOrder.items[0].id as string,
+      orderId: bodyOf(checkout).id,
+      firstSellerOrderId: firstSellerOrder.id,
+      secondSellerOrderId: secondSellerOrder.id,
+      firstItemId: firstSellerOrder.items[0].id,
       firstProductId: firstProduct.id,
       secondProductId: secondProduct.id,
     };
@@ -543,7 +543,7 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .post('/auth/register')
       .send({ email, password: PASSWORD })
       .expect(201);
-    return { userId: response.body.user.id as string };
+    return { userId: bodyOf(response).user.id };
   }
 
   async function login(email: string): Promise<string> {
@@ -551,7 +551,7 @@ describe('SellerOrder lifecycle (e2e)', () => {
       .post('/auth/login')
       .send({ email, password: PASSWORD })
       .expect(200);
-    return response.body.accessToken as string;
+    return bodyOf(response).accessToken;
   }
 
   function createProduct(sellerId: string, categoryId: string, title: string) {

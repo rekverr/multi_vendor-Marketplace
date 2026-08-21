@@ -550,12 +550,12 @@ export class OrderAdjustmentsService {
     }>,
     requestHash: string,
   ) {
-    if (refund.requestHash !== requestHash) {
+    const { requestHash: persistedRequestHash, ...result } = refund;
+    if (persistedRequestHash !== requestHash) {
       throw new ConflictException(
         'Idempotency key was used for another refund request',
       );
     }
-    const { requestHash: _requestHash, ...result } = refund;
     return result;
   }
 

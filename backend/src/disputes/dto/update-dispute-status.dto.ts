@@ -8,6 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { DisputeStatus } from '../../generated/prisma/client.js';
+import { trimString } from '../../common/transforms.js';
 
 export class UpdateDisputeStatusDto {
   @ApiProperty({ enum: DisputeStatus })
@@ -16,7 +17,7 @@ export class UpdateDisputeStatusDto {
 
   @ApiPropertyOptional({ minLength: 3, maxLength: 2000 })
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trimString)
   @IsString()
   @MinLength(3)
   @MaxLength(2000)

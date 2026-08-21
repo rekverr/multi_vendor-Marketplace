@@ -12,6 +12,7 @@ import {
   UserRole,
 } from '../src/generated/prisma/client.js';
 import { ProductReindexService } from '../src/search/product-reindex.service.js';
+import { bodyOf } from './helpers/http-response.js';
 
 const TEST_PREFIX = `public-products-${process.pid}`;
 
@@ -49,25 +50,25 @@ describe('Public Product catalog (e2e)', () => {
       .get('/products')
       .expect(200);
 
-    expect(list.body.items).toHaveLength(4);
-    expect(
-      list.body.items.map((product: { id: string }) => product.id),
-    ).not.toContain(draftId);
+    expect(bodyOf(list).items).toHaveLength(4);
+    expect(bodyOf(list).items.map((product) => product.id)).not.toContain(
+      draftId,
+    );
 
     const detail = await request(app.getHttpServer())
       .get(`/products/${publishedIds[0]}`)
       .expect(200);
 
-    expect(detail.body).toMatchObject({
+    expect(bodyOf(detail)).toMatchObject({
       id: publishedIds[0],
       category: { id: categoryAId },
       seller: { id: sellerAId, displayName: `${TEST_PREFIX} Seller A` },
     });
-    expect(detail.body).not.toHaveProperty('status');
-    expect(detail.body).not.toHaveProperty('sellerId');
-    expect(detail.body).not.toHaveProperty('categoryId');
-    expect(detail.body).not.toHaveProperty('moderatedById');
-    expect(detail.body.seller).not.toHaveProperty('userId');
+    expect(bodyOf(detail)).not.toHaveProperty('status');
+    expect(bodyOf(detail)).not.toHaveProperty('sellerId');
+    expect(bodyOf(detail)).not.toHaveProperty('categoryId');
+    expect(bodyOf(detail)).not.toHaveProperty('moderatedById');
+    expect(bodyOf(detail).seller).not.toHaveProperty('userId');
 
     await request(app.getHttpServer()).get(`/products/${draftId}`).expect(404);
   });
@@ -77,34 +78,35 @@ describe('Public Product catalog (e2e)', () => {
       .get('/products')
       .query({ categoryId: categoryAId })
       .expect(200);
-    expect(byCategory.body.items).toHaveLength(2);
+    expect(bodyOf(byCategory).items).toHaveLength(2);
 
     const bySeller = await request(app.getHttpServer())
       .get('/products')
       .query({ sellerId: sellerBId })
       .expect(200);
-    expect(bySeller.body.items).toHaveLength(2);
+    expect(bodyOf(bySeller).items).toHaveLength(2);
 
     const byPrice = await request(app.getHttpServer())
       .get('/products')
       .query({ minPrice: '15.00', maxPrice: '35.00' })
       .expect(200);
-    expect(
-      byPrice.body.items.map((product: { title: string }) => product.title),
-    ).toEqual(['Product 3', 'Product 2']);
+    expect(bodyOf(byPrice).items.map((product) => product.title)).toEqual([
+      'Product 3',
+      'Product 2',
+    ]);
 
     const available = await request(app.getHttpServer())
       .get('/products')
       .query({ available: 'true' })
       .expect(200);
-    expect(available.body.items).toHaveLength(3);
+    expect(bodyOf(available).items).toHaveLength(3);
 
     const unavailable = await request(app.getHttpServer())
       .get('/products')
       .query({ available: 'false' })
       .expect(200);
-    expect(unavailable.body.items).toHaveLength(1);
-    expect(unavailable.body.items[0].title).toBe('Product 2');
+    expect(bodyOf(unavailable).items).toHaveLength(1);
+    expect(bodyOf(unavailable).items[0].title).toBe('Product 2');
   });
 
   it('supports full-text search, price sorting and facets', async () => {
@@ -112,23 +114,22 @@ describe('Public Product catalog (e2e)', () => {
       .get('/products')
       .query({ q: 'Product 3' })
       .expect(200);
-    expect(textSearch.body.items[0].title).toBe('Product 3');
+    expect(bodyOf(textSearch).items[0].title).toBe('Product 3');
 
     const sorted = await request(app.getHttpServer())
       .get('/products')
       .query({ sort: 'price_asc' })
       .expect(200);
-    expect(
-      sorted.body.items.map((product: { title: string }) => product.title),
-    ).toEqual(['Product 1', 'Product 2', 'Product 3', 'Product 4']);
-    expect(sorted.body.facets).toEqual(
-      expect.objectContaining({
-        categoryId: expect.any(Object),
-        sellerId: expect.any(Object),
-        type: expect.any(Object),
-        inStock: expect.any(Object),
-      }),
-    );
+    expect(bodyOf(sorted).items.map((product) => product.title)).toEqual([
+      'Product 1',
+      'Product 2',
+      'Product 3',
+      'Product 4',
+    ]);
+    expect(bodyOf(sorted).facets).toHaveProperty('categoryId');
+    expect(bodyOf(sorted).facets).toHaveProperty('sellerId');
+    expect(bodyOf(sorted).facets).toHaveProperty('type');
+    expect(bodyOf(sorted).facets).toHaveProperty('inStock');
   });
 
   it('paginates with stable deterministic ordering', async () => {
@@ -145,23 +146,23 @@ describe('Public Product catalog (e2e)', () => {
       .query({ page: 2, pageSize: 2 })
       .expect(200);
 
-    expect(firstPage.body.pagination).toEqual({
+    expect(bodyOf(firstPage).pagination).toEqual({
       page: 1,
       pageSize: 2,
       total: 4,
       totalPages: 2,
     });
+    expect(bodyOf(firstPage).items.map((product) => product.title)).toEqual([
+      'Product 4',
+      'Product 3',
+    ]);
     expect(
-      firstPage.body.items.map((product: { title: string }) => product.title),
-    ).toEqual(['Product 4', 'Product 3']);
-    expect(
-      repeatedFirstPage.body.items.map((product: { id: string }) => product.id),
-    ).toEqual(
-      firstPage.body.items.map((product: { id: string }) => product.id),
-    );
-    expect(
-      secondPage.body.items.map((product: { title: string }) => product.title),
-    ).toEqual(['Product 2', 'Product 1']);
+      bodyOf(repeatedFirstPage).items.map((product) => product.id),
+    ).toEqual(bodyOf(firstPage).items.map((product) => product.id));
+    expect(bodyOf(secondPage).items.map((product) => product.title)).toEqual([
+      'Product 2',
+      'Product 1',
+    ]);
   });
 
   it.each([

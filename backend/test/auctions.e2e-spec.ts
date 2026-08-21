@@ -5,6 +5,7 @@ import type { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 import { PrismaService } from '../src/database/prisma.service.js';
+import { bodyOf } from './helpers/http-response.js';
 import {
   AuctionStatus,
   ProductStatus,
@@ -53,7 +54,7 @@ describe('Base Auction domain (e2e)', () => {
       .set('Authorization', `Bearer ${firstSeller.token}`)
       .send(configuration)
       .expect(200);
-    expect(created.body).toMatchObject({
+    expect(bodyOf(created)).toMatchObject({
       productId: auctionProduct.id,
       status: AuctionStatus.SCHEDULED,
       startingPrice: '25',
@@ -130,7 +131,7 @@ describe('Base Auction domain (e2e)', () => {
       .send(validConfiguration())
       .expect(200);
     await prisma.auction.update({
-      where: { id: created.body.id as string },
+      where: { id: bodyOf(created).id },
       data: { status: AuctionStatus.ACTIVE },
     });
 
@@ -152,7 +153,7 @@ describe('Base Auction domain (e2e)', () => {
       .expect(200);
 
     await request(app.getHttpServer())
-      .get(`/auctions/${configured.body.id}`)
+      .get(`/auctions/${bodyOf(configured).id}`)
       .expect(404);
     await prisma.product.update({
       where: { id: product.id },
@@ -163,22 +164,22 @@ describe('Base Auction domain (e2e)', () => {
     });
     const bid = await prisma.bid.create({
       data: {
-        auctionId: configured.body.id as string,
+        auctionId: bodyOf(configured).id,
         bidderId: bidder.id,
         amount: '30.00',
         idempotencyKey: 'public-history-bid',
       },
     });
     await prisma.auction.update({
-      where: { id: configured.body.id as string },
+      where: { id: bodyOf(configured).id },
       data: { currentHighestBidId: bid.id, version: 1 },
     });
 
     const response = await request(app.getHttpServer())
-      .get(`/auctions/${configured.body.id}`)
+      .get(`/auctions/${bodyOf(configured).id}`)
       .expect(200);
-    expect(response.body).toMatchObject({
-      id: configured.body.id,
+    expect(bodyOf(response)).toMatchObject({
+      id: bodyOf(configured).id,
       bidCount: 1,
       currentHighestBid: { id: bid.id, amount: '30' },
       product: {
@@ -186,13 +187,13 @@ describe('Base Auction domain (e2e)', () => {
         seller: { displayName: `${TEST_PREFIX}-public` },
       },
     });
-    expect(response.body.bids[0]).toEqual({
+    expect(bodyOf(response).bids[0]).toMatchObject({
       id: bid.id,
       amount: '30',
-      createdAt: expect.any(String),
     });
-    expect(response.body.bids[0]).not.toHaveProperty('bidderId');
-    expect(response.body).not.toHaveProperty('winnerId');
+    expect(typeof bodyOf(response).bids[0].createdAt).toBe('string');
+    expect(bodyOf(response).bids[0]).not.toHaveProperty('bidderId');
+    expect(bodyOf(response)).not.toHaveProperty('winnerId');
   });
 
   it('accepts valid bids and rejects minimum, eligibility and deadline violations', async () => {
@@ -206,7 +207,7 @@ describe('Base Auction domain (e2e)', () => {
       '25.00',
       201,
     );
-    expect(accepted.body.amount).toBe('25');
+    expect(bodyOf(accepted).amount).toBe('25');
     await placeBid(
       fixture.auctionId,
       customer.token,
@@ -294,7 +295,7 @@ describe('Base Auction domain (e2e)', () => {
       '25.00',
       201,
     );
-    expect(retry.body.id).toBe(first.body.id);
+    expect(bodyOf(retry).id).toBe(bodyOf(first).id);
     await placeBid(
       fixture.auctionId,
       customer.token,
@@ -331,14 +332,16 @@ describe('Base Auction domain (e2e)', () => {
       .post(`/admin/auctions/${fixture.auctionId}/finalize`)
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(201);
-    expect(repeated.body.id).toBe(finalized.body.id);
-    expect(finalized.body).toMatchObject({
+    expect(bodyOf(repeated).id).toBe(bodyOf(finalized).id);
+    expect(bodyOf(finalized)).toMatchObject({
       status: AuctionStatus.SOLD,
-      currentHighestBidId: bid.body.id,
+      currentHighestBidId: bodyOf(bid).id,
       winnerId: customer.userId,
       winningPrice: '35',
     });
-    expect(finalized.body.winnerCheckoutExpiresAt).toEqual(expect.any(String));
+    expect(bodyOf(finalized).winnerCheckoutExpiresAt).toEqual(
+      expect.any(String),
+    );
     expect(
       await prisma.outboxEvent.count({
         where: {
@@ -362,7 +365,7 @@ describe('Base Auction domain (e2e)', () => {
         .post(`/admin/auctions/${fixture.auctionId}/expire-winner-window`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(201);
-      expect(expired.body.status).toBe(AuctionStatus.UNSOLD);
+      expect(bodyOf(expired).status).toBe(AuctionStatus.UNSOLD);
     }
     expect(
       (
@@ -394,8 +397,8 @@ describe('Base Auction domain (e2e)', () => {
         .post(`/admin/auctions/${fixture.auctionId}/finalize`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(201);
-      expect(response.body.status).toBe(AuctionStatus.UNSOLD);
-      expect(response.body.winnerId).toBeNull();
+      expect(bodyOf(response).status).toBe(AuctionStatus.UNSOLD);
+      expect(bodyOf(response).winnerId).toBeNull();
     }
     expect(
       await prisma.outboxEvent.count({
@@ -420,12 +423,12 @@ describe('Base Auction domain (e2e)', () => {
       .send({ email, password: PASSWORD })
       .expect(201);
     await prisma.user.update({
-      where: { id: registration.body.user.id as string },
+      where: { id: bodyOf(registration).user.id },
       data: { role: UserRole.SELLER },
     });
     const seller = await prisma.sellerProfile.create({
       data: {
-        userId: registration.body.user.id as string,
+        userId: bodyOf(registration).user.id,
         displayName: `${TEST_PREFIX}-${suffix}`,
       },
     });
@@ -433,7 +436,7 @@ describe('Base Auction domain (e2e)', () => {
       .post('/auth/login')
       .send({ email, password: PASSWORD })
       .expect(200);
-    return { sellerId: seller.id, token: login.body.accessToken as string };
+    return { sellerId: seller.id, token: bodyOf(login).accessToken };
   }
 
   async function createCustomer(suffix: string) {
@@ -447,8 +450,8 @@ describe('Base Auction domain (e2e)', () => {
       .send({ email, password: PASSWORD })
       .expect(200);
     return {
-      userId: registration.body.user.id as string,
-      token: login.body.accessToken as string,
+      userId: bodyOf(registration).user.id,
+      token: bodyOf(login).accessToken,
     };
   }
 
@@ -463,7 +466,7 @@ describe('Base Auction domain (e2e)', () => {
       .post('/auth/login')
       .send({ email, password: PASSWORD })
       .expect(200);
-    return login.body.accessToken as string;
+    return bodyOf(login).accessToken;
   }
 
   async function createActiveAuction(suffix: string) {
@@ -486,7 +489,7 @@ describe('Base Auction domain (e2e)', () => {
       data: { status: ProductStatus.PUBLISHED, publishedAt: new Date() },
     });
     await prisma.auction.update({
-      where: { id: configured.body.id as string },
+      where: { id: bodyOf(configured).id },
       data: {
         status: AuctionStatus.ACTIVE,
         startsAt: new Date(Date.now() - 60_000),
@@ -496,7 +499,7 @@ describe('Base Auction domain (e2e)', () => {
     return {
       seller,
       productId: product.id,
-      auctionId: configured.body.id as string,
+      auctionId: bodyOf(configured).id,
     };
   }
 
@@ -545,7 +548,7 @@ describe('Base Auction domain (e2e)', () => {
         ),
       )
       .expect(201);
-    return response.body as { id: string };
+    return bodyOf<{ id: string }>(response);
   }
 
   function productPayload(

@@ -16,12 +16,13 @@ describe('OutboxService', () => {
       payload: { value: 'safe' },
     });
 
-    expect(create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
+    const createQuery: unknown = create.mock.calls[0]?.[0];
+    expect(createQuery).toMatchObject({
+      data: {
         eventType: 'TEST_CREATED',
         schemaVersion: 1,
         payload: { value: 'safe' },
-      }),
+      },
     });
   });
 
@@ -29,7 +30,10 @@ describe('OutboxService', () => {
     const receiptCreate = jest.fn().mockResolvedValue({});
     const tx = { processedEvent: { create: receiptCreate } };
     const prisma = {
-      $transaction: jest.fn((callback) => callback(tx)),
+      $transaction: jest.fn(
+        (callback: (client: typeof tx) => unknown): Promise<unknown> =>
+          Promise.resolve(callback(tx)),
+      ),
     };
     const handler = jest.fn().mockResolvedValue('applied');
     const service = new OutboxService(prisma as never);

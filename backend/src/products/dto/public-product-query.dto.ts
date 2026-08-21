@@ -11,6 +11,7 @@ import {
   Min,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { parseBooleanString } from '../../common/transforms.js';
 
 const MONEY_PATTERN = /^\d{1,17}(?:\.\d{1,2})?$/;
 
@@ -63,11 +64,7 @@ export class PublicProductQueryDto {
 
   @ApiPropertyOptional({ type: Boolean })
   @IsOptional()
-  @Transform(({ value }) => {
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-    return value;
-  })
+  @Transform(parseBooleanString)
   @IsBoolean()
   available?: boolean;
 

@@ -132,7 +132,9 @@ describe('AdminAnalyticsService', () => {
       to: '2026-08-21T00:00:00.000Z',
     });
     let csv = '';
-    for await (const chunk of output.stream) csv += chunk.toString();
+    for await (const chunk of output.stream) {
+      csv += Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
+    }
 
     expect(csv.startsWith('orderId,sellerOrderId,orderCreatedAt')).toBe(true);
     expect(csv).toContain('"Store, Inc."');

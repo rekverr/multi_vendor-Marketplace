@@ -80,23 +80,19 @@ describe('SellerDashboardService', () => {
       },
       select: { id: true, displayName: true },
     });
-    expect(prisma.financialLedgerEntry.groupBy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          sellerOrder: { sellerId: 'seller-profile-id' },
-        }),
-      }),
-    );
-    expect(prisma.sellerOrder.groupBy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ sellerId: 'seller-profile-id' }),
-      }),
-    );
-    expect(prisma.sellerOrder.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ sellerId: 'seller-profile-id' }),
-      }),
-    );
+    const ledgerQuery: unknown =
+      prisma.financialLedgerEntry.groupBy.mock.calls[0]?.[0];
+    const statusQuery: unknown = prisma.sellerOrder.groupBy.mock.calls[0]?.[0];
+    const recentQuery: unknown = prisma.sellerOrder.findMany.mock.calls[0]?.[0];
+    expect(ledgerQuery).toMatchObject({
+      where: { sellerOrder: { sellerId: 'seller-profile-id' } },
+    });
+    expect(statusQuery).toMatchObject({
+      where: { sellerId: 'seller-profile-id' },
+    });
+    expect(recentQuery).toMatchObject({
+      where: { sellerId: 'seller-profile-id' },
+    });
   });
 
   it('calculates recognized and refunded financials from snapshots', async () => {

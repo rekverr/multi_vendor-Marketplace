@@ -9,6 +9,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { trimString } from '../../common/transforms.js';
 
 export class CreateReviewDto {
   @ApiProperty({ format: 'uuid' })
@@ -22,7 +23,7 @@ export class CreateReviewDto {
   rating!: number;
 
   @ApiProperty({ minLength: 1, maxLength: 2000 })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trimString)
   @IsString()
   @MinLength(1)
   @MaxLength(2000)

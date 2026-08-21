@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 import { PrismaService } from '../src/database/prisma.service.js';
 import { UserRole } from '../src/generated/prisma/client.js';
+import { bodyOf } from './helpers/http-response.js';
 
 const PASSWORD = 'correct-horse-battery-staple';
 const TEST_PREFIX = `seller-onboarding-${process.pid}`;
@@ -70,7 +71,7 @@ describe('RBAC and Seller onboarding (e2e)', () => {
 
     const response = await submitApplication(customerToken, 'Customer Store');
 
-    expect(response.body).toMatchObject({
+    expect(bodyOf(response)).toMatchObject({
       displayName: 'Customer Store',
       status: 'PENDING',
       reviewedById: null,
@@ -109,25 +110,25 @@ describe('RBAC and Seller onboarding (e2e)', () => {
       .query({ status: 'PENDING' })
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
-    expect(listResponse.body).toHaveLength(1);
+    expect(bodyOf<unknown[]>(listResponse)).toHaveLength(1);
 
     await request(app.getHttpServer())
-      .get(`/seller-applications/${application.body.id}`)
+      .get(`/seller-applications/${bodyOf(application).id}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
     const approval = await request(app.getHttpServer())
-      .patch(`/seller-applications/${application.body.id}/approve`)
+      .patch(`/seller-applications/${bodyOf(application).id}/approve`)
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
-    expect(approval.body).toMatchObject({
+    expect(bodyOf(approval)).toMatchObject({
       status: 'APPROVED',
       rejectionReason: null,
       reviewedBy: { email: ADMIN_EMAIL },
       user: { email: CUSTOMER_EMAIL, role: 'SELLER' },
     });
-    expect(approval.body.reviewedAt).toEqual(expect.any(String));
+    expect(bodyOf(approval).reviewedAt).toEqual(expect.any(String));
 
     const promotedUser = await prisma.user.findUniqueOrThrow({
       where: { email: CUSTOMER_EMAIL },
@@ -140,7 +141,7 @@ describe('RBAC and Seller onboarding (e2e)', () => {
       .get('/auth/me')
       .set('Authorization', `Bearer ${customerToken}`)
       .expect(200);
-    expect(currentUser.body.role).toBe('SELLER');
+    expect(bodyOf(currentUser).role).toBe('SELLER');
   });
 
   it('allows an Admin to reject an application with review metadata', async () => {
@@ -152,18 +153,18 @@ describe('RBAC and Seller onboarding (e2e)', () => {
     );
 
     const rejection = await request(app.getHttpServer())
-      .patch(`/seller-applications/${application.body.id}/reject`)
+      .patch(`/seller-applications/${bodyOf(application).id}/reject`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ reason: 'Insufficient business information' })
       .expect(200);
 
-    expect(rejection.body).toMatchObject({
+    expect(bodyOf(rejection)).toMatchObject({
       status: 'REJECTED',
       rejectionReason: 'Insufficient business information',
       reviewedBy: { email: ADMIN_EMAIL },
       user: { role: 'CUSTOMER' },
     });
-    expect(rejection.body.reviewedAt).toEqual(expect.any(String));
+    expect(bodyOf(rejection).reviewedAt).toEqual(expect.any(String));
 
     const user = await prisma.user.findUniqueOrThrow({
       where: { email: CUSTOMER_EMAIL },
@@ -179,13 +180,13 @@ describe('RBAC and Seller onboarding (e2e)', () => {
     const application = await submitApplication(customerToken, 'Final Store');
 
     await request(app.getHttpServer())
-      .patch(`/seller-applications/${application.body.id}/reject`)
+      .patch(`/seller-applications/${bodyOf(application).id}/reject`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ reason: 'Rejected once' })
       .expect(200);
 
     await request(app.getHttpServer())
-      .patch(`/seller-applications/${application.body.id}/approve`)
+      .patch(`/seller-applications/${bodyOf(application).id}/approve`)
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(409);
   });
@@ -198,7 +199,7 @@ describe('RBAC and Seller onboarding (e2e)', () => {
     );
 
     await request(app.getHttpServer())
-      .patch(`/seller-applications/${application.body.id}/approve`)
+      .patch(`/seller-applications/${bodyOf(application).id}/approve`)
       .set('Authorization', `Bearer ${customerToken}`)
       .expect(403);
   });
@@ -213,10 +214,10 @@ describe('RBAC and Seller onboarding (e2e)', () => {
 
     const responses = await Promise.all([
       request(app.getHttpServer())
-        .patch(`/seller-applications/${application.body.id}/approve`)
+        .patch(`/seller-applications/${bodyOf(application).id}/approve`)
         .set('Authorization', `Bearer ${adminToken}`),
       request(app.getHttpServer())
-        .patch(`/seller-applications/${application.body.id}/approve`)
+        .patch(`/seller-applications/${bodyOf(application).id}/approve`)
         .set('Authorization', `Bearer ${adminToken}`),
     ]);
 
@@ -255,7 +256,7 @@ describe('RBAC and Seller onboarding (e2e)', () => {
       .send({ email, password: PASSWORD })
       .expect(200);
 
-    return login.body.accessToken as string;
+    return bodyOf(login).accessToken;
   }
 
   async function createAdminAndLogin(): Promise<string> {
@@ -270,7 +271,7 @@ describe('RBAC and Seller onboarding (e2e)', () => {
       .send({ email: ADMIN_EMAIL, password: PASSWORD })
       .expect(200);
 
-    return login.body.accessToken as string;
+    return bodyOf(login).accessToken;
   }
 
   function submitApplication(accessToken: string, displayName: string) {

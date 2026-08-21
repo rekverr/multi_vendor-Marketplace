@@ -5,6 +5,7 @@ import type { App } from 'supertest/types.js';
 
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
+import { bodyOf } from './helpers/http-response.js';
 
 describe('Backend foundation (e2e)', () => {
   let app: INestApplication<App>;
@@ -25,7 +26,7 @@ describe('Backend foundation (e2e)', () => {
       .expect(200)
       .expect('Content-Type', /json/);
 
-    expect(response.body).toMatchObject({
+    expect(bodyOf(response)).toMatchObject({
       status: 'ok',
       info: {
         database: {

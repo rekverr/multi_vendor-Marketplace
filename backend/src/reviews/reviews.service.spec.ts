@@ -26,8 +26,8 @@ describe('ReviewsService', () => {
     product: { update: jest.fn() },
   };
   const prisma = {
-    $transaction: jest.fn(async (callback: (client: typeof tx) => unknown) =>
-      callback(tx),
+    $transaction: jest.fn((callback: (client: typeof tx) => unknown) =>
+      Promise.resolve(callback(tx)),
     ),
   };
   const outbox = { create: jest.fn() };
@@ -67,17 +67,14 @@ describe('ReviewsService', () => {
     );
 
     expect(result.id).toBe(reviewId);
-    expect(tx.orderItem.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          id: orderItemId,
-          productId,
-          sellerOrder: expect.objectContaining({
-            order: { customerId },
-          }),
-        }),
-      }),
-    );
+    const eligibilityQuery: unknown = tx.orderItem.findFirst.mock.calls[0]?.[0];
+    expect(eligibilityQuery).toMatchObject({
+      where: {
+        id: orderItemId,
+        productId,
+        sellerOrder: { order: { customerId } },
+      },
+    });
     expect(outbox.create).toHaveBeenCalledWith(
       tx,
       expect.objectContaining({

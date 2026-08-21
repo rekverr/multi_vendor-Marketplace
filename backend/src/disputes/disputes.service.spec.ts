@@ -59,11 +59,10 @@ describe('DisputesService', () => {
 
     expect(result.id).toBe(disputeId);
     expect(tx.$queryRaw).toHaveBeenCalledTimes(1);
-    expect(tx.dispute.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ customerId, orderId, sellerOrderId }),
-      }),
-    );
+    const createQuery: unknown = tx.dispute.create.mock.calls[0]?.[0];
+    expect(createQuery).toMatchObject({
+      data: { customerId, orderId, sellerOrderId },
+    });
     expect(outbox.create).toHaveBeenCalledWith(
       tx,
       expect.objectContaining({ eventType: 'DISPUTE_OPENED' }),
@@ -90,18 +89,17 @@ describe('DisputesService', () => {
       pageSize: 20,
     });
 
-    expect(prisma.dispute.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          sellerOrder: {
-            seller: {
-              userId: 'seller-user-id',
-              user: { role: 'SELLER' },
-            },
+    const listQuery: unknown = prisma.dispute.findMany.mock.calls[0]?.[0];
+    expect(listQuery).toMatchObject({
+      where: {
+        sellerOrder: {
+          seller: {
+            userId: 'seller-user-id',
+            user: { role: 'SELLER' },
           },
-        }),
-      }),
-    );
+        },
+      },
+    });
   });
 
   it('allows a valid Admin transition and writes an Outbox event', async () => {

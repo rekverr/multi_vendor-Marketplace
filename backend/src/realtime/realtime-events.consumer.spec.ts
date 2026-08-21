@@ -53,13 +53,14 @@ describe('RealtimeEventsConsumer', () => {
 
     await consumer.process({ data: event } as Job<DomainEventEnvelope>);
 
-    expect(gateway.emitProduct).toHaveBeenCalledWith(
-      event.aggregateId,
-      expect.objectContaining({
-        eventId: event.eventId,
-        payload: expect.objectContaining({ stock: 2, available: true }),
-      }),
-    );
+    expect(gateway.emitProduct).toHaveBeenCalled();
+    const emittedAggregate: unknown = gateway.emitProduct.mock.calls[0]?.[0];
+    const emittedEvent: unknown = gateway.emitProduct.mock.calls[0]?.[1];
+    expect(emittedAggregate).toBe(event.aggregateId);
+    expect(emittedEvent).toMatchObject({
+      eventId: event.eventId,
+      payload: { stock: 2, available: true },
+    });
     expect(prisma.processedEvent.create).toHaveBeenCalled();
   });
 

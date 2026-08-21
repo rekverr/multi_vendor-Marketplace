@@ -143,7 +143,7 @@ export class RealtimeGateway implements OnGatewayConnection {
   }
 
   private extractToken(client: RealtimeSocket): string | null {
-    const authToken = client.handshake.auth?.token;
+    const authToken: unknown = client.handshake.auth?.token;
     if (typeof authToken === 'string' && authToken) return authToken;
     const header = client.handshake.headers.authorization;
     if (!header) return null;

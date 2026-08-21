@@ -1,8 +1,9 @@
 import { Transform } from 'class-transformer';
 import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
+import { trimString } from '../../common/transforms.js';
 
 export class LoginDto {
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trimString)
   @IsEmail()
   @MaxLength(254)
   email!: string;
