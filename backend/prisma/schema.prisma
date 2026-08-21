@@ -92,6 +92,14 @@ enum AuctionStatus {
   CANCELLED
 }
 
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+  CLOSED
+}
+
 model User {
   id                         String                @id @default(uuid()) @db.Uuid
   email                      String                @unique
@@ -112,6 +120,8 @@ model User {
   bids                       Bid[]
   wonAuctions                Auction[]             @relation("AuctionWinner")
   reviews                    Review[]
+  disputes                   Dispute[]             @relation("DisputeCustomer")
+  reviewedDisputes           Dispute[]             @relation("DisputeReviewer")
 }
 
 model OAuthAccount {
@@ -278,6 +288,7 @@ model Order {
   sellerOrders          SellerOrder[]
   checkoutIdempotencies CheckoutIdempotency[]
   refunds               Refund[]
+  disputes              Dispute[]
 
   @@index([customerId, createdAt])
   @@index([status, createdAt])
@@ -305,8 +316,7 @@ model SellerOrder {
   items              OrderItem[]
   ledgerEntries      FinancialLedgerEntry[]
   refunds            Refund[]
-  review             Review?                @relation(fields: [reviewId], references: [id])
-  reviewId           String?                @db.Uuid
+  disputes           Dispute[]
 
   @@unique([orderId, sellerId])
   @@index([sellerId, status, createdAt])
@@ -335,27 +345,55 @@ model OrderItem {
   ledgerEntries      FinancialLedgerEntry[]
   refunds            Refund[]
   review             Review?
+  disputes           Dispute[]
 
   @@index([sellerOrderId])
   @@index([productId])
 }
 
 model Review {
-  id           String        @id @default(uuid()) @db.Uuid
-  customerId   String        @db.Uuid
-  productId    String        @db.Uuid
-  orderItemId  String        @unique @db.Uuid
-  rating       Int
-  text         String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  customer     User          @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  product      Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
-  orderItem    OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
-  sellerOrders SellerOrder[]
+  id          String    @id @default(uuid()) @db.Uuid
+  customerId  String    @db.Uuid
+  productId   String    @db.Uuid
+  orderItemId String    @unique @db.Uuid
+  rating      Int
+  text        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  customer    User      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
 
   @@unique([customerId, productId])
   @@index([productId, createdAt])
+}
+
+model Dispute {
+  id             String        @id @default(uuid()) @db.Uuid
+  customerId     String        @db.Uuid
+  orderId        String        @db.Uuid
+  sellerOrderId  String        @db.Uuid
+  orderItemId    String?       @db.Uuid
+  scopeKey       String        @db.VarChar(80)
+  status         DisputeStatus @default(OPEN)
+  reason         String        @db.VarChar(2000)
+  resolutionNote String?       @db.VarChar(2000)
+  reviewedById   String?       @db.Uuid
+  reviewedAt     DateTime?
+  resolvedAt     DateTime?
+  closedAt       DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  customer       User          @relation("DisputeCustomer", fields: [customerId], references: [id], onDelete: Restrict)
+  reviewedBy     User?         @relation("DisputeReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  order          Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  sellerOrder    SellerOrder   @relation(fields: [sellerOrderId], references: [id], onDelete: Restrict)
+  orderItem      OrderItem?    @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+
+  @@unique([customerId, scopeKey])
+  @@index([customerId, createdAt])
+  @@index([sellerOrderId, createdAt])
+  @@index([status, createdAt])
 }
 
 model FinancialLedgerEntry {

@@ -9,6 +9,7 @@ import { CartModule } from './cart/cart.module.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
 import { envValidationSchema } from './config/env.validation.js';
 import { DatabaseModule } from './database/database.module.js';
+import { DisputesModule } from './disputes/disputes.module.js';
 import { HealthModule } from './health/health.module.js';
 import { MetricsModule } from './metrics/metrics.module.js';
 import { OutboxModule } from './outbox/outbox.module.js';
@@ -31,6 +32,7 @@ import { SearchModule } from './search/search.module.js';
     }),
 
     DatabaseModule,
+    DisputesModule,
     CacheModule,
     CartModule,
     AuthModule,

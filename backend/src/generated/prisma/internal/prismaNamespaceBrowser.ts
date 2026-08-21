@@ -66,6 +66,7 @@ export const ModelName = {
   SellerOrder: 'SellerOrder',
   OrderItem: 'OrderItem',
   Review: 'Review',
+  Dispute: 'Dispute',
   FinancialLedgerEntry: 'FinancialLedgerEntry',
   CheckoutIdempotency: 'CheckoutIdempotency',
   Refund: 'Refund',
@@ -271,8 +272,7 @@ export const SellerOrderScalarFieldEnum = {
   cancelledAt: 'cancelledAt',
   completedAt: 'completedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  reviewId: 'reviewId'
+  updatedAt: 'updatedAt'
 } as const
 
 export type SellerOrderScalarFieldEnum = (typeof SellerOrderScalarFieldEnum)[keyof typeof SellerOrderScalarFieldEnum]
@@ -312,6 +312,27 @@ export const ReviewScalarFieldEnum = {
 } as const
 
 export type ReviewScalarFieldEnum = (typeof ReviewScalarFieldEnum)[keyof typeof ReviewScalarFieldEnum]
+
+
+export const DisputeScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  orderId: 'orderId',
+  sellerOrderId: 'sellerOrderId',
+  orderItemId: 'orderItemId',
+  scopeKey: 'scopeKey',
+  status: 'status',
+  reason: 'reason',
+  resolutionNote: 'resolutionNote',
+  reviewedById: 'reviewedById',
+  reviewedAt: 'reviewedAt',
+  resolvedAt: 'resolvedAt',
+  closedAt: 'closedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DisputeScalarFieldEnum = (typeof DisputeScalarFieldEnum)[keyof typeof DisputeScalarFieldEnum]
 
 
 export const FinancialLedgerEntryScalarFieldEnum = {

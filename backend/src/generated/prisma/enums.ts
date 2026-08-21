@@ -124,3 +124,14 @@ export const AuctionStatus = {
 } as const
 
 export type AuctionStatus = (typeof AuctionStatus)[keyof typeof AuctionStatus]
+
+
+export const DisputeStatus = {
+  OPEN: 'OPEN',
+  UNDER_REVIEW: 'UNDER_REVIEW',
+  RESOLVED: 'RESOLVED',
+  REJECTED: 'REJECTED',
+  CLOSED: 'CLOSED'
+} as const
+
+export type DisputeStatus = (typeof DisputeStatus)[keyof typeof DisputeStatus]
