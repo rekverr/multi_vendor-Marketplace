@@ -1,4 +1,5 @@
 export const DOMAIN_EVENTS_QUEUE = 'domain-events';
+export const REALTIME_EVENTS_QUEUE = 'realtime-events';
 
 export const DEFAULT_JOB_OPTIONS = {
   attempts: 5,
