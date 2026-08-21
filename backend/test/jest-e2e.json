@@ -4,6 +4,9 @@
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "watchman": false,
+  "maxWorkers": 1,
+  "globalSetup": "<rootDir>/global-setup.ts",
+  "globalTeardown": "<rootDir>/global-teardown.ts",
   "setupFiles": ["<rootDir>/setup-env.ts"],
   "extensionsToTreatAsEsm": [".ts"],
   "transform": {
