@@ -65,6 +65,7 @@ export const ModelName = {
   Order: 'Order',
   SellerOrder: 'SellerOrder',
   OrderItem: 'OrderItem',
+  Review: 'Review',
   FinancialLedgerEntry: 'FinancialLedgerEntry',
   CheckoutIdempotency: 'CheckoutIdempotency',
   Refund: 'Refund',
@@ -171,6 +172,8 @@ export const ProductScalarFieldEnum = {
   type: 'type',
   price: 'price',
   stock: 'stock',
+  ratingAverage: 'ratingAverage',
+  ratingCount: 'ratingCount',
   status: 'status',
   moderatedById: 'moderatedById',
   moderatedAt: 'moderatedAt',
@@ -268,7 +271,8 @@ export const SellerOrderScalarFieldEnum = {
   cancelledAt: 'cancelledAt',
   completedAt: 'completedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  reviewId: 'reviewId'
 } as const
 
 export type SellerOrderScalarFieldEnum = (typeof SellerOrderScalarFieldEnum)[keyof typeof SellerOrderScalarFieldEnum]
@@ -294,6 +298,20 @@ export const OrderItemScalarFieldEnum = {
 } as const
 
 export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof typeof OrderItemScalarFieldEnum]
+
+
+export const ReviewScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  productId: 'productId',
+  orderItemId: 'orderItemId',
+  rating: 'rating',
+  text: 'text',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ReviewScalarFieldEnum = (typeof ReviewScalarFieldEnum)[keyof typeof ReviewScalarFieldEnum]
 
 
 export const FinancialLedgerEntryScalarFieldEnum = {

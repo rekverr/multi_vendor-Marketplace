@@ -15,6 +15,7 @@ import { OutboxModule } from './outbox/outbox.module.js';
 import { OrdersModule } from './orders/orders.module.js';
 import { ProductsModule } from './products/products.module.js';
 import { RealtimeModule } from './realtime/realtime.module.js';
+import { ReviewsModule } from './reviews/reviews.module.js';
 import { SellersModule } from './sellers/sellers.module.js';
 import { SearchModule } from './search/search.module.js';
 
@@ -37,6 +38,7 @@ import { SearchModule } from './search/search.module.js';
     CategoriesModule,
     ProductsModule,
     RealtimeModule,
+    ReviewsModule,
     SellersModule,
     HealthModule,
     MetricsModule,

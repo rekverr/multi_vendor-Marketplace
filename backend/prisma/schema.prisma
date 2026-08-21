@@ -111,6 +111,7 @@ model User {
   initiatedRefunds           Refund[]
   bids                       Bid[]
   wonAuctions                Auction[]             @relation("AuctionWinner")
+  reviews                    Review[]
 }
 
 model OAuthAccount {
@@ -187,6 +188,8 @@ model Product {
   type            ProductType
   price           Decimal?      @db.Decimal(19, 2)
   stock           Int           @default(0)
+  ratingAverage   Decimal       @default(0) @db.Decimal(3, 2)
+  ratingCount     Int           @default(0)
   status          ProductStatus @default(DRAFT)
   moderatedById   String?       @db.Uuid
   moderatedAt     DateTime?
@@ -200,6 +203,7 @@ model Product {
   cartItems       CartItem[]
   orderItems      OrderItem[]
   auction         Auction?
+  reviews         Review[]
 
   @@index([sellerId, status])
   @@index([categoryId, status])
@@ -301,6 +305,8 @@ model SellerOrder {
   items              OrderItem[]
   ledgerEntries      FinancialLedgerEntry[]
   refunds            Refund[]
+  review             Review?                @relation(fields: [reviewId], references: [id])
+  reviewId           String?                @db.Uuid
 
   @@unique([orderId, sellerId])
   @@index([sellerId, status, createdAt])
@@ -328,9 +334,28 @@ model OrderItem {
   product            Product                @relation(fields: [productId], references: [id], onDelete: Restrict)
   ledgerEntries      FinancialLedgerEntry[]
   refunds            Refund[]
+  review             Review?
 
   @@index([sellerOrderId])
   @@index([productId])
+}
+
+model Review {
+  id           String        @id @default(uuid()) @db.Uuid
+  customerId   String        @db.Uuid
+  productId    String        @db.Uuid
+  orderItemId  String        @unique @db.Uuid
+  rating       Int
+  text         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  customer     User          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  product      Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  orderItem    OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  sellerOrders SellerOrder[]
+
+  @@unique([customerId, productId])
+  @@index([productId, createdAt])
 }
 
 model FinancialLedgerEntry {

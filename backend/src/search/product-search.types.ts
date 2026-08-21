@@ -9,6 +9,8 @@ export interface ProductSearchDocument {
   price: number | null;
   stock: number;
   inStock: boolean;
+  ratingAverage: number;
+  ratingCount: number;
   categoryId: string;
   categoryName: string;
   sellerId: string;

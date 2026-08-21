@@ -40,8 +40,15 @@ export class MeilisearchService implements OnApplicationBootstrap {
         'type',
         'inStock',
         'price',
+        'ratingAverage',
       ],
-      sortableAttributes: ['price', 'publishedAt', 'updatedAt', 'id'],
+      sortableAttributes: [
+        'price',
+        'ratingAverage',
+        'publishedAt',
+        'updatedAt',
+        'id',
+      ],
       displayedAttributes: ['*'],
     });
     await task.waitTask();

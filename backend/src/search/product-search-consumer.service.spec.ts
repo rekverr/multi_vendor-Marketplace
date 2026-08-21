@@ -18,6 +18,8 @@ describe('ProductSearchConsumerService', () => {
       type: ProductType.FIXED_PRICE,
       price: new Prisma.Decimal('10.00'),
       stock: 1,
+      ratingAverage: new Prisma.Decimal('4.00'),
+      ratingCount: 1,
       categoryId: '00000000-0000-4000-8000-000000000002',
       sellerId: '00000000-0000-4000-8000-000000000003',
       publishedAt: new Date(),

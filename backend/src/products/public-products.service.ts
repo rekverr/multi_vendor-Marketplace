@@ -21,6 +21,8 @@ const publicProductSelect = {
   type: true,
   price: true,
   stock: true,
+  ratingAverage: true,
+  ratingCount: true,
   publishedAt: true,
   createdAt: true,
   updatedAt: true,

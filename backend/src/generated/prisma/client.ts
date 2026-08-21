@@ -112,6 +112,11 @@ export type SellerOrder = Prisma.SellerOrderModel
  */
 export type OrderItem = Prisma.OrderItemModel
 /**
+ * Model Review
+ * 
+ */
+export type Review = Prisma.ReviewModel
+/**
  * Model FinancialLedgerEntry
  * 
  */
