@@ -7,6 +7,8 @@ import { AuctionDetailPage } from "../features/auctions/AuctionDetailPage";
 import { CatalogPage } from "../features/catalog/CatalogPage";
 import { ProductDetailPage } from "../features/catalog/ProductDetailPage";
 import { CartPage } from "../features/cart/CartPage";
+import { OrderDetailPage } from "../features/orders/OrderDetailPage";
+import { OrdersPage } from "../features/orders/OrdersPage";
 import { AccountPage } from "../pages/AccountPage";
 import { HomePage } from "../pages/HomePage";
 import { RoleLandingPage } from "../pages/RoleLandingPage";
@@ -31,7 +33,11 @@ export const router = createBrowserRouter([
       },
       {
         element: <ProtectedRoute roles={["CUSTOMER"]} />,
-        children: [{ path: "/cart", element: <CartPage /> }],
+        children: [
+          { path: "/cart", element: <CartPage /> },
+          { path: "/orders", element: <OrdersPage /> },
+          { path: "/orders/:orderId", element: <OrderDetailPage /> },
+        ],
       },
       {
         element: <ProtectedRoute roles={["SELLER"]} />,

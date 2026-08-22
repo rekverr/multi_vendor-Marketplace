@@ -19,12 +19,15 @@ export function AppShell() {
             <>
               <NavLink to="/account">Account</NavLink>
               {auth.hasRole("CUSTOMER") && (
-                <NavLink to="/cart">
-                  Cart
-                  {cart.cart?.itemCount ? (
-                    <span className="cart-count">{cart.cart.itemCount}</span>
-                  ) : null}
-                </NavLink>
+                <>
+                  <NavLink to="/orders">Orders</NavLink>
+                  <NavLink to="/cart">
+                    Cart
+                    {cart.cart?.itemCount ? (
+                      <span className="cart-count">{cart.cart.itemCount}</span>
+                    ) : null}
+                  </NavLink>
+                </>
               )}
               {auth.hasRole("SELLER") && <NavLink to="/seller">Seller</NavLink>}
               {auth.hasRole("ADMIN") && <NavLink to="/admin">Admin</NavLink>}

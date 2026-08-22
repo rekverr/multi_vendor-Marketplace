@@ -42,8 +42,8 @@ export function CheckoutSuccess({ order }: { order: CheckoutOrder }) {
         ))}
       </section>
       <div className="home-actions">
-        <Link className="button button-primary" to="/account">
-          Open account
+        <Link className="button button-primary" to={`/orders/${order.id}`}>
+          View Order
         </Link>
         <Link className="button button-secondary" to="/products">
           Continue browsing

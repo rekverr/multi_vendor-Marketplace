@@ -107,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         completeGoogleLogin,
         logout,
         hasRole,
+        getAccessToken: () => accessTokenRef.current,
       }}
     >
       {children}

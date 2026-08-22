@@ -16,6 +16,7 @@ export interface AuthContextValue {
   completeGoogleLogin: (code: string, state: string) => Promise<void>;
   logout: () => Promise<void>;
   hasRole: (...roles: UserRole[]) => boolean;
+  getAccessToken: () => string | null;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
