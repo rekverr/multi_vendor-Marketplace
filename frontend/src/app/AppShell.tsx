@@ -21,6 +21,7 @@ export function AppShell() {
               {auth.hasRole("CUSTOMER") && (
                 <>
                   <NavLink to="/orders">Orders</NavLink>
+                  <NavLink to="/seller/apply">Sell</NavLink>
                   <NavLink to="/cart">
                     Cart
                     {cart.cart?.itemCount ? (

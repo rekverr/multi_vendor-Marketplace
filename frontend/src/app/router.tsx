@@ -9,6 +9,14 @@ import { ProductDetailPage } from "../features/catalog/ProductDetailPage";
 import { CartPage } from "../features/cart/CartPage";
 import { OrderDetailPage } from "../features/orders/OrderDetailPage";
 import { OrdersPage } from "../features/orders/OrdersPage";
+import { AuctionEditorPage } from "../features/seller/AuctionEditorPage";
+import { ProductEditorPage } from "../features/seller/ProductEditorPage";
+import { SellerApplicationPage } from "../features/seller/SellerApplicationPage";
+import { SellerDashboardPage } from "../features/seller/SellerDashboardPage";
+import { SellerLayout } from "../features/seller/SellerLayout";
+import { SellerOrderDetailPage } from "../features/seller/SellerOrderDetailPage";
+import { SellerOrdersPage } from "../features/seller/SellerOrdersPage";
+import { SellerProductsPage } from "../features/seller/SellerProductsPage";
 import { AccountPage } from "../pages/AccountPage";
 import { HomePage } from "../pages/HomePage";
 import { RoleLandingPage } from "../pages/RoleLandingPage";
@@ -34,6 +42,7 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute roles={["CUSTOMER"]} />,
         children: [
+          { path: "/seller/apply", element: <SellerApplicationPage /> },
           { path: "/cart", element: <CartPage /> },
           { path: "/orders", element: <OrdersPage /> },
           { path: "/orders/:orderId", element: <OrderDetailPage /> },
@@ -42,7 +51,25 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute roles={["SELLER"]} />,
         children: [
-          { path: "/seller", element: <RoleLandingPage area="Seller" /> },
+          {
+            path: "/seller",
+            element: <SellerLayout />,
+            children: [
+              { index: true, element: <SellerDashboardPage /> },
+              { path: "products", element: <SellerProductsPage /> },
+              { path: "products/new", element: <ProductEditorPage /> },
+              { path: "products/:productId", element: <ProductEditorPage /> },
+              {
+                path: "products/:productId/auction",
+                element: <AuctionEditorPage />,
+              },
+              { path: "orders", element: <SellerOrdersPage /> },
+              {
+                path: "orders/:sellerOrderId",
+                element: <SellerOrderDetailPage />,
+              },
+            ],
+          },
         ],
       },
       {
