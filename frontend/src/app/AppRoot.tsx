@@ -1,6 +1,13 @@
-import { AuthProvider } from '../features/auth/AuthProvider'
-import { AppShell } from './AppShell'
+import { AuthProvider } from "../features/auth/AuthProvider";
+import { CartProvider } from "../features/cart/CartProvider";
+import { AppShell } from "./AppShell";
 
 export function AppRoot() {
-  return <AuthProvider><AppShell /></AuthProvider>
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <AppShell />
+      </CartProvider>
+    </AuthProvider>
+  );
 }
