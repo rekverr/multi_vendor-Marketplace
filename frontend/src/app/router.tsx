@@ -1,5 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import { GoogleCallbackPage } from "../features/auth/GoogleCallbackPage";
+import { AdminAnalyticsPage } from "../features/admin/AdminAnalyticsPage";
+import { AdminApplicationsPage } from "../features/admin/AdminApplicationsPage";
+import { AdminCategoriesPage } from "../features/admin/AdminCategoriesPage";
+import { AdminDisputeDetailPage } from "../features/admin/AdminDisputeDetailPage";
+import { AdminDisputesPage } from "../features/admin/AdminDisputesPage";
+import { AdminLayout } from "../features/admin/AdminLayout";
 import { LoginPage } from "../features/auth/LoginPage";
 import { ProtectedRoute } from "../features/auth/ProtectedRoute";
 import { RegisterPage } from "../features/auth/RegisterPage";
@@ -19,7 +25,6 @@ import { SellerOrdersPage } from "../features/seller/SellerOrdersPage";
 import { SellerProductsPage } from "../features/seller/SellerProductsPage";
 import { AccountPage } from "../pages/AccountPage";
 import { HomePage } from "../pages/HomePage";
-import { RoleLandingPage } from "../pages/RoleLandingPage";
 import { StatusPage } from "../pages/StatusPage";
 import { AppRoot } from "./AppRoot";
 
@@ -75,7 +80,20 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute roles={["ADMIN"]} />,
         children: [
-          { path: "/admin", element: <RoleLandingPage area="Admin" /> },
+          {
+            path: "/admin",
+            element: <AdminLayout />,
+            children: [
+              { index: true, element: <AdminAnalyticsPage /> },
+              { path: "applications", element: <AdminApplicationsPage /> },
+              { path: "categories", element: <AdminCategoriesPage /> },
+              { path: "disputes", element: <AdminDisputesPage /> },
+              {
+                path: "disputes/:disputeId",
+                element: <AdminDisputeDetailPage />,
+              },
+            ],
+          },
         ],
       },
       { path: "*", element: <StatusPage /> },
