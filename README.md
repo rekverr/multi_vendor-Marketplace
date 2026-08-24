@@ -247,7 +247,18 @@ RUN_ID=local-001 \
 k6 run load-tests/auction-bidding.js
 ```
 
-See [load-tests/README.md](./load-tests/README.md). It reports actual bid RPS, p95, accepted/rejected/unexpected counts and final correctness. No benchmark number is claimed without an actual run.
+See [load-tests/README.md](./load-tests/README.md) for setup, correctness verification and the detailed report.
+
+Measured locally on 2026-08-24 with 20 concurrent bidders submitting the same `1000.00` bid:
+
+- bid RPS: `5.77`;
+- bid-request p95 latency: `109.41 ms`;
+- accepted bids: `1`;
+- expected business rejections: `19`;
+- unexpected errors: `0`;
+- final authoritative correctness checks passed: `1`.
+
+The final Auction contained exactly one bid, version increased once, and the authoritative highest bid was `1000.00`.
 
 ## Known Limitations
 
@@ -259,7 +270,6 @@ See [load-tests/README.md](./load-tests/README.md). It reports actual bid RPS, p
 - Conversion analytics remain unavailable until eligible cart/checkout-attempt events are persisted.
 - `VITE_API_URL` is build-time configuration.
 - Compose placeholders, TLS and edge routing are operator responsibilities, not production credentials.
-- The k6 script is present, but no benchmark result is recorded because it has not been executed locally.
 
 ## More Documentation
 

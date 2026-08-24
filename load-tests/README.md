@@ -55,4 +55,25 @@ The teardown fetches `GET /auctions/:id` from the authoritative API and verifies
 
 The JSON summary reports measured bid RPS, bid-only p95 latency, success count, expected rejection count, unexpected error count and final correctness count. Setup registration/login and final verification requests are tagged separately and excluded from the custom bid latency/RPS metrics.
 
-No benchmark result is committed here. Record results only from an actual completed run, together with machine/runtime configuration and the exact environment values used.
+## Recorded local result
+
+Measured at `2026-08-24T11:00:27.103Z` using:
+
+- host: macOS `15.6.1`, Darwin arm64;
+- k6: `v2.2.0`, darwin/arm64;
+- backend: local Docker Compose service at `http://localhost:3000`;
+- scenario: `20` concurrent VUs, one bid attempt per VU;
+- bid amount: `1000.00`;
+- run identity: `local-005`;
+- p95 threshold: `5000 ms`.
+
+Measured output:
+
+- bid RPS: `5.765945289251529`;
+- bid-request p95 latency: `109.40969999999999 ms`;
+- accepted bids: `1`;
+- expected HTTP `409` business rejections: `19`;
+- unexpected errors: `0`;
+- final correctness successes: `1`.
+
+The run completed all `20/20` iterations with no interruption. Authoritative verification reported `bidCount = 1`, Auction `version = 1`, and highest bid `1000.00`, so the concurrent equal-bid invariant held.
