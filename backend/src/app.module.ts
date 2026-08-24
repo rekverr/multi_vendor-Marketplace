@@ -1,5 +1,13 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import {
+  ExecutionContext,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import type { Request } from 'express';
 
 import { AnalyticsModule } from './analytics/analytics.module.js';
 import { AuthModule } from './auth/auth.module.js';
@@ -31,6 +39,25 @@ import { SearchModule } from './search/search.module.js';
         abortEarly: false,
       },
     }),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [
+        {
+          name: 'login',
+          limit: config.getOrThrow<number>('RATE_LIMIT_LOGIN_MAX'),
+          ttl: config.getOrThrow<number>('RATE_LIMIT_LOGIN_TTL_SECONDS') * 1000,
+          skipIf: (context: ExecutionContext) =>
+            !matchesHttpRoute(context, 'POST', /^\/auth\/login\/?$/),
+        },
+        {
+          name: 'bid',
+          limit: config.getOrThrow<number>('RATE_LIMIT_BID_MAX'),
+          ttl: config.getOrThrow<number>('RATE_LIMIT_BID_TTL_SECONDS') * 1000,
+          skipIf: (context: ExecutionContext) =>
+            !matchesHttpRoute(context, 'POST', /^\/auctions\/[^/]+\/bids\/?$/),
+        },
+      ],
+    }),
 
     AnalyticsModule,
     DatabaseModule,
@@ -50,9 +77,23 @@ import { SearchModule } from './search/search.module.js';
     OrdersModule,
     SearchModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer.apply(CorrelationIdMiddleware).forRoutes('*');
   }
+}
+
+function matchesHttpRoute(
+  context: ExecutionContext,
+  method: string,
+  pathPattern: RegExp,
+): boolean {
+  if (context.getType() !== 'http') return false;
+
+  const request = context.switchToHttp().getRequest<Request>();
+  const path = (request.originalUrl || request.url).split('?')[0];
+
+  return request.method === method && pathPattern.test(path);
 }

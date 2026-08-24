@@ -157,6 +157,9 @@ function documentCommonErrors(document: OpenAPIObject): void {
           'Business state, ownership, stock or idempotency conflict',
         );
       }
+      if (path === '/auth/login' || path.endsWith('/bids')) {
+        addError(operation, '429', 'Rate limit exceeded');
+      }
     }
   }
 }

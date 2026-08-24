@@ -37,6 +37,14 @@ export const envValidationSchema = Joi.object({
     .max(900)
     .default(600),
 
+  RATE_LIMIT_LOGIN_MAX: Joi.number().integer().positive().default(5),
+
+  RATE_LIMIT_LOGIN_TTL_SECONDS: Joi.number().integer().positive().default(60),
+
+  RATE_LIMIT_BID_MAX: Joi.number().integer().positive().default(30),
+
+  RATE_LIMIT_BID_TTL_SECONDS: Joi.number().integer().positive().default(60),
+
   REDIS_URL: Joi.string()
     .pattern(/^redis(s)?:\/\//)
     .required(),
