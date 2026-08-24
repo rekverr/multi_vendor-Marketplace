@@ -1,3 +1,11 @@
+import { readE2eDatabaseState } from './e2e-database-state.ts';
+
+const databaseState = readE2eDatabaseState();
+if (databaseState) {
+  process.env.DATABASE_URL = databaseState.databaseUrl;
+  process.env.E2E_DATABASE_SCHEMA = databaseState.schema;
+}
+
 process.env.JWT_ACCESS_SECRET =
   'test-access-secret-with-at-least-32-characters';
 process.env.JWT_ACCESS_TTL_SECONDS = '900';

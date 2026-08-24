@@ -12,9 +12,16 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
       throw new Error('DATABASE_URL is not defined');
     }
 
-    const adapter = new PrismaPg({
-      connectionString,
-    });
+    const databaseUrl = new URL(connectionString);
+    const schema = databaseUrl.searchParams.get('schema') ?? undefined;
+    databaseUrl.searchParams.delete('schema');
+    const adapter = new PrismaPg(
+      {
+        connectionString: databaseUrl.toString(),
+        options: schema ? `-c search_path=${schema}` : undefined,
+      },
+      schema ? { schema } : undefined,
+    );
 
     super({ adapter });
   }

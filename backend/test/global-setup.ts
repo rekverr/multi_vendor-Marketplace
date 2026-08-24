@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';
+import { writeE2eDatabaseState } from './e2e-database-state.ts';
 
 export default function globalSetup(): void {
   const databaseUrl = process.env.DATABASE_URL;
@@ -14,6 +15,7 @@ export default function globalSetup(): void {
   process.env.NODE_ENV = 'test';
   process.env.E2E_DATABASE_SCHEMA = schema;
   process.env.DATABASE_URL = url.toString();
+  writeE2eDatabaseState({ databaseUrl: url.toString(), schema });
 
   execFileSync(
     process.execPath,
