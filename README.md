@@ -249,6 +249,19 @@ k6 run load-tests/auction-bidding.js
 
 See [load-tests/README.md](./load-tests/README.md) for setup, correctness verification and the detailed report.
 
+For the additional scarce-stock checkout scenario, prepare a published fixed-price Product with stock `1`, then run:
+
+```bash
+BASE_URL=http://localhost:3000 \
+PRODUCT_ID=00000000-0000-4000-8000-000000000002 \
+INITIAL_STOCK=1 \
+PURCHASERS=5 \
+RUN_ID=checkout-local-001 \
+k6 run load-tests/scarce-stock-checkout.js
+```
+
+This second scenario requires exactly one successful checkout, four expected inventory conflicts, final stock `0` and zero oversells. Actual checkout measurements must be recorded only after executing it against disposable local data.
+
 Measured locally on 2026-08-24 with 20 concurrent bidders submitting the same `1000.00` bid:
 
 - bid RPS: `5.77`;

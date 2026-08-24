@@ -1,4 +1,6 @@
-# Auction bidding load test
+# Marketplace concurrency load tests
+
+## Auction bidding
 
 This k6 scenario sends the same valid bid from many independent authenticated Customers to one fresh Auction at the same time. PostgreSQL locking must produce exactly one accepted bid and reject every competing equal bid without losing or duplicating the authoritative highest bid.
 
@@ -77,3 +79,34 @@ Measured output:
 - final correctness successes: `1`.
 
 The run completed all `20/20` iterations with no interruption. Authoritative verification reported `bidCount = 1`, Auction `version = 1`, and highest bid `1000.00`, so the concurrent equal-bid invariant held.
+
+## Scarce-stock checkout
+
+This scenario places one unit of the same fixed-price Product in multiple independent Customer carts, then starts all checkout requests together. PostgreSQL must allow exactly the available number of purchases and reject every competing request without negative stock.
+
+Prepare a disposable published `FIXED_PRICE` Product whose stock is exactly `INITIAL_STOCK`. `PURCHASERS` must be greater than `INITIAL_STOCK`; stock `1` with `5` purchasers is the default and recommended case. Use a new `RUN_ID` for every execution because the script intentionally creates Customers and Orders and consumes the Product stock.
+
+The setup logs in once per purchaser. For larger runs, configure the local backend with `RATE_LIMIT_LOGIN_MAX` at least equal to `PURCHASERS`; do not weaken production rate limits for a public environment.
+
+From the repository root:
+
+```bash
+BASE_URL=http://localhost:3000 \
+PRODUCT_ID=00000000-0000-4000-8000-000000000002 \
+INITIAL_STOCK=1 \
+PURCHASERS=5 \
+RUN_ID=checkout-local-001 \
+k6 run load-tests/scarce-stock-checkout.js
+```
+
+Optional configuration:
+
+- `CUSTOMER_PASSWORD`: generated Customer password; defaults to a safe local test value.
+- `P95_LIMIT_MS`: checkout-only p95 threshold in milliseconds; defaults to `5000`.
+- `SUMMARY_PATH`: writes the measured JSON summary to the specified path in addition to stdout.
+
+For `PURCHASERS=N` and `INITIAL_STOCK=S`, thresholds require exactly `S` HTTP `201` responses, exactly `N - S` expected HTTP `409` conflicts, zero unexpected responses, zero oversells, final authoritative stock `0`, and checkout-request p95 below `P95_LIMIT_MS`.
+
+Final stock is read through an authenticated failed Customer Cart, which is backed by PostgreSQL. The verification intentionally does not use public Product detail because Redis catalog data may be eventually consistent. Setup and verification traffic is excluded from custom checkout RPS and latency metrics.
+
+No checkout benchmark result is recorded here until this scenario is executed against prepared disposable data. Do not infer or fabricate values from the configured thresholds.
