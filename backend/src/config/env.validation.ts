@@ -29,6 +29,8 @@ export const envValidationSchema = Joi.object({
 
   GOOGLE_OAUTH_REDIRECT_URI: Joi.string().uri().required(),
 
+  GOOGLE_OAUTH_COOKIE_SECURE: Joi.boolean().truthy('true').falsy('false'),
+
   GOOGLE_OAUTH_STATE_TTL_SECONDS: Joi.number()
     .integer()
     .positive()

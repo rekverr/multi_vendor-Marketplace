@@ -10,10 +10,10 @@ export function GoogleCallbackPage() {
   const [searchParams] = useSearchParams();
   const started = useRef(false);
   const [error, setError] = useState<string | null>(null);
+  const providerError = searchParams.get("error");
   const invalidResponse =
-    searchParams.get("error") ||
-    !searchParams.get("code") ||
-    !searchParams.get("state");
+    providerError || !searchParams.get("code") || !searchParams.get("state");
+  const providerErrorMessage = googleProviderErrorMessage(providerError);
 
   useEffect(() => {
     if (started.current) return;
@@ -34,6 +34,7 @@ export function GoogleCallbackPage() {
         <h1>Google sign-in did not complete.</h1>
         <p>
           {error ??
+            providerErrorMessage ??
             "Google sign-in was cancelled or returned an invalid response."}
         </p>
         <button
@@ -45,4 +46,10 @@ export function GoogleCallbackPage() {
       </main>
     );
   return <PageLoader label="Completing Google sign-in" />;
+}
+
+function googleProviderErrorMessage(error: string | null): string | null {
+  if (!error) return null;
+  if (error === "access_denied") return "Google sign-in was cancelled.";
+  return "Google could not complete authentication. Please try again.";
 }

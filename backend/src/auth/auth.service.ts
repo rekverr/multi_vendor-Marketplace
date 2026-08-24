@@ -114,7 +114,11 @@ export class AuthService {
   async authenticateWithGoogle(
     identity: VerifiedGoogleIdentity,
   ): Promise<AuthResponse> {
-    if (!identity.emailVerified) {
+    if (
+      !identity.emailVerified ||
+      !identity.providerAccountId.trim() ||
+      !identity.email.trim()
+    ) {
       throw new UnauthorizedException('Google authentication failed');
     }
 
@@ -135,7 +139,7 @@ export class AuthService {
         });
 
         if (linkedAccount) {
-          return linkedAccount.user;
+          return this.assertLinkedGoogleIdentity(linkedAccount.user, email);
         }
 
         let matchedUser = await transaction.user.findUnique({
@@ -198,7 +202,7 @@ export class AuthService {
         });
 
         if (linkedAccount) {
-          user = linkedAccount.user;
+          user = this.assertLinkedGoogleIdentity(linkedAccount.user, email);
         } else {
           throw new ConflictException('Google account cannot be linked safely');
         }
@@ -367,6 +371,17 @@ export class AuthService {
 
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
+  }
+
+  private assertLinkedGoogleIdentity<T extends PublicUser>(
+    user: T,
+    verifiedEmail: string,
+  ): T {
+    if (this.normalizeEmail(user.email) !== verifiedEmail) {
+      throw new ConflictException('Google account cannot be linked safely');
+    }
+
+    return user;
   }
 
   private toPublicUser(user: PublicUser): PublicUser {

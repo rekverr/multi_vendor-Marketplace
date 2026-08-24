@@ -13,7 +13,10 @@ export class GoogleOAuthStateService {
   constructor(configService: ConfigService) {
     this.maxAge =
       configService.getOrThrow<number>('GOOGLE_OAUTH_STATE_TTL_SECONDS') * 1000;
-    this.secure = configService.get<string>('NODE_ENV') === 'production';
+    this.secure = configService.get<boolean>(
+      'GOOGLE_OAUTH_COOKIE_SECURE',
+      configService.get<string>('NODE_ENV') === 'production',
+    );
   }
 
   issue(response: Response): string {
