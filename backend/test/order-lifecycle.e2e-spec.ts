@@ -605,6 +605,7 @@ describe('SellerOrder lifecycle (e2e)', () => {
         where: { sellerOrder: { order: { customer: users } } },
       }),
       prisma.checkoutIdempotency.deleteMany({ where: { customer: users } }),
+      prisma.checkoutAttempt.deleteMany({ where: { customer: users } }),
       prisma.sellerOrder.deleteMany({ where: { order: { customer: users } } }),
       prisma.order.deleteMany({ where: { customer: users } }),
       prisma.cartItem.deleteMany({ where: { cart: { user: users } } }),

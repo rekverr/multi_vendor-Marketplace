@@ -414,6 +414,7 @@ export const ModelName = {
   Dispute: 'Dispute',
   FinancialLedgerEntry: 'FinancialLedgerEntry',
   CheckoutIdempotency: 'CheckoutIdempotency',
+  CheckoutAttempt: 'CheckoutAttempt',
   Refund: 'Refund',
   Auction: 'Auction',
   Bid: 'Bid'
@@ -432,7 +433,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "oAuthAccount" | "refreshSession" | "sellerApplication" | "sellerProfile" | "category" | "product" | "outboxEvent" | "processedEvent" | "cart" | "cartItem" | "order" | "sellerOrder" | "orderItem" | "review" | "dispute" | "financialLedgerEntry" | "checkoutIdempotency" | "refund" | "auction" | "bid"
+    modelProps: "user" | "oAuthAccount" | "refreshSession" | "sellerApplication" | "sellerProfile" | "category" | "product" | "outboxEvent" | "processedEvent" | "cart" | "cartItem" | "order" | "sellerOrder" | "orderItem" | "review" | "dispute" | "financialLedgerEntry" | "checkoutIdempotency" | "checkoutAttempt" | "refund" | "auction" | "bid"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1768,6 +1769,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CheckoutAttempt: {
+      payload: Prisma.$CheckoutAttemptPayload<ExtArgs>
+      fields: Prisma.CheckoutAttemptFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CheckoutAttemptFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CheckoutAttemptFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload>
+        }
+        findFirst: {
+          args: Prisma.CheckoutAttemptFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CheckoutAttemptFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload>
+        }
+        findMany: {
+          args: Prisma.CheckoutAttemptFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload>[]
+        }
+        create: {
+          args: Prisma.CheckoutAttemptCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload>
+        }
+        createMany: {
+          args: Prisma.CheckoutAttemptCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CheckoutAttemptCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload>[]
+        }
+        delete: {
+          args: Prisma.CheckoutAttemptDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload>
+        }
+        update: {
+          args: Prisma.CheckoutAttemptUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload>
+        }
+        deleteMany: {
+          args: Prisma.CheckoutAttemptDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CheckoutAttemptUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CheckoutAttemptUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload>[]
+        }
+        upsert: {
+          args: Prisma.CheckoutAttemptUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckoutAttemptPayload>
+        }
+        aggregate: {
+          args: Prisma.CheckoutAttemptAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCheckoutAttempt>
+        }
+        groupBy: {
+          args: Prisma.CheckoutAttemptGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CheckoutAttemptGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CheckoutAttemptCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CheckoutAttemptCountAggregateOutputType> | number
+        }
+      }
+    }
     Refund: {
       payload: Prisma.$RefundPayload<ExtArgs>
       fields: Prisma.RefundFieldRefs
@@ -2307,6 +2382,23 @@ export const CheckoutIdempotencyScalarFieldEnum = {
 export type CheckoutIdempotencyScalarFieldEnum = (typeof CheckoutIdempotencyScalarFieldEnum)[keyof typeof CheckoutIdempotencyScalarFieldEnum]
 
 
+export const CheckoutAttemptScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  idempotencyKey: 'idempotencyKey',
+  requestHash: 'requestHash',
+  status: 'status',
+  orderId: 'orderId',
+  correlationId: 'correlationId',
+  lastErrorCode: 'lastErrorCode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  completedAt: 'completedAt'
+} as const
+
+export type CheckoutAttemptScalarFieldEnum = (typeof CheckoutAttemptScalarFieldEnum)[keyof typeof CheckoutAttemptScalarFieldEnum]
+
+
 export const RefundScalarFieldEnum = {
   id: 'id',
   initiatedById: 'initiatedById',
@@ -2643,6 +2735,20 @@ export type ListEnumCheckoutIdempotencyStatusFieldRefInput<$PrismaModel> = Field
 
 
 /**
+ * Reference to a field of type 'CheckoutAttemptStatus'
+ */
+export type EnumCheckoutAttemptStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CheckoutAttemptStatus'>
+
+
+
+/**
+ * Reference to a field of type 'CheckoutAttemptStatus[]'
+ */
+export type ListEnumCheckoutAttemptStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CheckoutAttemptStatus[]'>
+
+
+
+/**
  * Reference to a field of type 'AuctionStatus'
  */
 export type EnumAuctionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuctionStatus'>
@@ -2838,6 +2944,7 @@ export type GlobalOmitConfig = {
   dispute?: Prisma.DisputeOmit
   financialLedgerEntry?: Prisma.FinancialLedgerEntryOmit
   checkoutIdempotency?: Prisma.CheckoutIdempotencyOmit
+  checkoutAttempt?: Prisma.CheckoutAttemptOmit
   refund?: Prisma.RefundOmit
   auction?: Prisma.AuctionOmit
   bid?: Prisma.BidOmit
@@ -2903,4 +3010,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-

@@ -524,6 +524,23 @@ export type EnumCheckoutIdempotencyStatusWithAggregatesFilter<$PrismaModel = nev
   _max?: Prisma.NestedEnumCheckoutIdempotencyStatusFilter<$PrismaModel>
 }
 
+export type EnumCheckoutAttemptStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.CheckoutAttemptStatus | Prisma.EnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CheckoutAttemptStatus[] | Prisma.ListEnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CheckoutAttemptStatus[] | Prisma.ListEnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCheckoutAttemptStatusFilter<$PrismaModel> | $Enums.CheckoutAttemptStatus
+}
+
+export type EnumCheckoutAttemptStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CheckoutAttemptStatus | Prisma.EnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CheckoutAttemptStatus[] | Prisma.ListEnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CheckoutAttemptStatus[] | Prisma.ListEnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCheckoutAttemptStatusWithAggregatesFilter<$PrismaModel> | $Enums.CheckoutAttemptStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCheckoutAttemptStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCheckoutAttemptStatusFilter<$PrismaModel>
+}
+
 export type EnumAuctionStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.AuctionStatus | Prisma.EnumAuctionStatusFieldRefInput<$PrismaModel>
   in?: $Enums.AuctionStatus[] | Prisma.ListEnumAuctionStatusFieldRefInput<$PrismaModel>
@@ -1032,6 +1049,23 @@ export type NestedEnumCheckoutIdempotencyStatusWithAggregatesFilter<$PrismaModel
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumCheckoutIdempotencyStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumCheckoutIdempotencyStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumCheckoutAttemptStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.CheckoutAttemptStatus | Prisma.EnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CheckoutAttemptStatus[] | Prisma.ListEnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CheckoutAttemptStatus[] | Prisma.ListEnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCheckoutAttemptStatusFilter<$PrismaModel> | $Enums.CheckoutAttemptStatus
+}
+
+export type NestedEnumCheckoutAttemptStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CheckoutAttemptStatus | Prisma.EnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CheckoutAttemptStatus[] | Prisma.ListEnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CheckoutAttemptStatus[] | Prisma.ListEnumCheckoutAttemptStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCheckoutAttemptStatusWithAggregatesFilter<$PrismaModel> | $Enums.CheckoutAttemptStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCheckoutAttemptStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCheckoutAttemptStatusFilter<$PrismaModel>
 }
 
 export type NestedEnumAuctionStatusFilter<$PrismaModel = never> = {

@@ -1,12 +1,14 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
 import {
+  CheckoutAttemptStatus,
   CheckoutIdempotencyStatus,
   LedgerAccount,
   LedgerDirection,
@@ -72,6 +74,18 @@ export class CheckoutService {
     this.validateIdempotencyKey(idempotencyKey);
     const requestHash = this.createRequestHash(requestContext);
 
+    try {
+      await this.ensureCheckoutAttempt(
+        customerId,
+        idempotencyKey,
+        requestHash,
+        correlationId,
+      );
+    } catch (error) {
+      this.recordCheckoutFailure(error, correlationId);
+      throw error;
+    }
+
     const existing = await this.findIdempotency(customerId, idempotencyKey);
     if (existing) {
       try {
@@ -113,15 +127,22 @@ export class CheckoutService {
           const conflict = new ConflictException(
             'Checkout conflicted with another inventory update',
           );
+          await this.markCheckoutAttemptFailed(
+            customerId,
+            idempotencyKey,
+            conflict,
+          );
           this.recordCheckoutFailure(conflict, correlationId, true);
           throw conflict;
         }
+        await this.markCheckoutAttemptFailed(customerId, idempotencyKey, error);
         this.recordCheckoutFailure(error, correlationId);
         throw error;
       }
     }
 
     const error = new ConflictException('Checkout could not be completed');
+    await this.markCheckoutAttemptFailed(customerId, idempotencyKey, error);
     this.recordCheckoutFailure(error, correlationId);
     throw error;
   }
@@ -339,6 +360,15 @@ export class CheckoutService {
             completedAt: new Date(),
           },
         });
+        await tx.checkoutAttempt.update({
+          where: { customerId_idempotencyKey: { customerId, idempotencyKey } },
+          data: {
+            status: CheckoutAttemptStatus.SUCCEEDED,
+            orderId: order.id,
+            lastErrorCode: null,
+            completedAt: new Date(),
+          },
+        });
 
         return tx.order.findUniqueOrThrow({
           where: { id: order.id },
@@ -392,6 +422,70 @@ export class CheckoutService {
     return this.prisma.checkoutIdempotency.findUnique({
       where: { customerId_idempotencyKey: { customerId, idempotencyKey } },
       select: { requestHash: true, status: true, orderId: true },
+    });
+  }
+
+  private async ensureCheckoutAttempt(
+    customerId: string,
+    idempotencyKey: string,
+    requestHash: string,
+    correlationId: string,
+  ): Promise<void> {
+    try {
+      await this.prisma.checkoutAttempt.create({
+        data: {
+          customerId,
+          idempotencyKey,
+          requestHash,
+          correlationId,
+        },
+      });
+      return;
+    } catch (error) {
+      if (!this.isCheckoutAttemptConflict(error)) throw error;
+    }
+
+    const existing = await this.prisma.checkoutAttempt.findUniqueOrThrow({
+      where: { customerId_idempotencyKey: { customerId, idempotencyKey } },
+      select: { requestHash: true, status: true },
+    });
+    if (existing.requestHash !== requestHash) {
+      throw new ConflictException(
+        'Idempotency key was used for another request',
+      );
+    }
+    if (existing.status === CheckoutAttemptStatus.FAILED) {
+      await this.prisma.checkoutAttempt.update({
+        where: { customerId_idempotencyKey: { customerId, idempotencyKey } },
+        data: {
+          status: CheckoutAttemptStatus.PROCESSING,
+          correlationId,
+          lastErrorCode: null,
+          completedAt: null,
+        },
+      });
+    }
+  }
+
+  private async markCheckoutAttemptFailed(
+    customerId: string,
+    idempotencyKey: string,
+    error: unknown,
+  ): Promise<void> {
+    await this.prisma.checkoutAttempt.updateMany({
+      where: {
+        customerId,
+        idempotencyKey,
+        status: { not: CheckoutAttemptStatus.SUCCEEDED },
+      },
+      data: {
+        status: CheckoutAttemptStatus.FAILED,
+        lastErrorCode:
+          error instanceof HttpException
+            ? `HTTP_${error.getStatus()}`
+            : 'INTERNAL_ERROR',
+        completedAt: new Date(),
+      },
     });
   }
 
@@ -466,6 +560,22 @@ export class CheckoutService {
     const target = error.meta?.target;
     return (
       error.meta?.modelName === 'CheckoutIdempotency' ||
+      (Array.isArray(target) &&
+        target.includes('customerId') &&
+        target.includes('idempotencyKey'))
+    );
+  }
+
+  private isCheckoutAttemptConflict(error: unknown): boolean {
+    if (
+      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      error.code !== 'P2002'
+    ) {
+      return false;
+    }
+    const target = error.meta?.target;
+    return (
+      error.meta?.modelName === 'CheckoutAttempt' ||
       (Array.isArray(target) &&
         target.includes('customerId') &&
         target.includes('idempotencyKey'))

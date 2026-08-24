@@ -167,6 +167,11 @@ describe('Customer checkout (e2e)', () => {
       await prisma.order.count({ where: { customerId: customer.userId } }),
     ).toBe(1);
     expect(
+      await prisma.checkoutAttempt.count({
+        where: { customerId: customer.userId },
+      }),
+    ).toBe(1);
+    expect(
       (
         await prisma.product.findUniqueOrThrow({
           where: { id: product.productId },
@@ -308,6 +313,17 @@ describe('Customer checkout (e2e)', () => {
         where: { customerId: customer.userId },
       }),
     ).toBe(0);
+    expect(
+      await prisma.checkoutAttempt.findUniqueOrThrow({
+        where: {
+          customerId_idempotencyKey: {
+            customerId: customer.userId,
+            idempotencyKey: 'rollback-checkout',
+          },
+        },
+        select: { status: true, lastErrorCode: true },
+      }),
+    ).toEqual({ status: 'FAILED', lastErrorCode: 'HTTP_409' });
     expect(await prisma.financialLedgerEntry.count()).toBe(0);
     expect(
       await prisma.cartItem.count({
@@ -417,6 +433,7 @@ describe('Customer checkout (e2e)', () => {
         where: { sellerOrder: { order: { customer: users } } },
       }),
       prisma.checkoutIdempotency.deleteMany({ where: { customer: users } }),
+      prisma.checkoutAttempt.deleteMany({ where: { customer: users } }),
       prisma.sellerOrder.deleteMany({ where: { order: { customer: users } } }),
       prisma.order.deleteMany({ where: { customer: users } }),
       prisma.cartItem.deleteMany({ where: { cart: { user: users } } }),

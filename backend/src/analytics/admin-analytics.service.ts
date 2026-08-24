@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Readable } from 'node:stream';
 import {
+  CheckoutAttemptStatus,
   LedgerAccount,
   LedgerDirection,
   Prisma,
@@ -63,6 +64,7 @@ export class AdminAnalyticsService {
       topProducts,
       topSellers,
       dailySales,
+      checkoutAttemptRows,
     ] = await Promise.all([
       this.netSales(range.from, range.to),
       this.netSales(previous.from, previous.to),
@@ -79,6 +81,11 @@ export class AdminAnalyticsService {
       this.topProducts(range.from, range.to),
       this.topSellers(range.from, range.to),
       this.dailySales(range.from, range.to),
+      this.prisma.checkoutAttempt.groupBy({
+        by: ['status'],
+        where: { createdAt: { gte: range.from, lte: range.to } },
+        _count: { _all: true },
+      }),
     ]);
 
     return {
@@ -95,6 +102,8 @@ export class AdminAnalyticsService {
         topSellers: 'Top 5 by recognized SELLER ledger revenue after reversals',
         dailySales:
           'Net Order sales assigned to UTC Order creation day; later refunds reduce that day',
+        conversion:
+          'Unique successful checkout attempts divided by all unique checkout attempts, scoped by attempt creation time; idempotent retries count once',
       },
       financials: this.mapFinancials(currentSales, ledgerRows),
       orderStatusSummary: statusRows.map((row) => ({
@@ -126,11 +135,7 @@ export class AdminAnalyticsService {
         })),
       },
       periodComparison: this.compareSales(currentSales, previousSales),
-      conversion: {
-        available: false,
-        reason:
-          'Eligible cart or failed checkout sessions are not persisted, so a defensible denominator is unavailable',
-      },
+      conversion: this.mapConversion(checkoutAttemptRows),
     };
   }
 
@@ -314,6 +319,37 @@ export class AdminAnalyticsService {
               .toFixed(2),
       };
     });
+  }
+
+  private mapConversion(
+    rows: Array<{
+      status: CheckoutAttemptStatus;
+      _count: { _all: number };
+    }>,
+  ) {
+    const count = (status: CheckoutAttemptStatus) =>
+      rows.find((row) => row.status === status)?._count._all ?? 0;
+    const successfulAttempts = count(CheckoutAttemptStatus.SUCCEEDED);
+    const failedAttempts = count(CheckoutAttemptStatus.FAILED);
+    const processingAttempts = count(CheckoutAttemptStatus.PROCESSING);
+    const totalAttempts =
+      successfulAttempts + failedAttempts + processingAttempts;
+
+    return {
+      available: totalAttempts > 0,
+      successfulAttempts,
+      failedAttempts,
+      processingAttempts,
+      totalAttempts,
+      ratePercent:
+        totalAttempts === 0
+          ? null
+          : new Prisma.Decimal(successfulAttempts)
+              .div(totalAttempts)
+              .mul(100)
+              .toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP)
+              .toFixed(2),
+    };
   }
 
   private netSales(from: Date, to: Date) {

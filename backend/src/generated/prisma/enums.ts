@@ -113,6 +113,15 @@ export const CheckoutIdempotencyStatus = {
 export type CheckoutIdempotencyStatus = (typeof CheckoutIdempotencyStatus)[keyof typeof CheckoutIdempotencyStatus]
 
 
+export const CheckoutAttemptStatus = {
+  PROCESSING: 'PROCESSING',
+  SUCCEEDED: 'SUCCEEDED',
+  FAILED: 'FAILED'
+} as const
+
+export type CheckoutAttemptStatus = (typeof CheckoutAttemptStatus)[keyof typeof CheckoutAttemptStatus]
+
+
 export const AuctionStatus = {
   SCHEDULED: 'SCHEDULED',
   ACTIVE: 'ACTIVE',

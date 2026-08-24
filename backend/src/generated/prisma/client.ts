@@ -131,6 +131,11 @@ export type FinancialLedgerEntry = Prisma.FinancialLedgerEntryModel
  */
 export type CheckoutIdempotency = Prisma.CheckoutIdempotencyModel
 /**
+ * Model CheckoutAttempt
+ *
+ */
+export type CheckoutAttempt = Prisma.CheckoutAttemptModel
+/**
  * Model Refund
  * 
  */

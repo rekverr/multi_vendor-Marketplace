@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import { BadRequestException } from '@nestjs/common';
 import {
+  CheckoutAttemptStatus,
   LedgerAccount,
   LedgerDirection,
   Prisma,
@@ -13,6 +14,7 @@ describe('AdminAnalyticsService', () => {
     financialLedgerEntry: { groupBy: jest.fn() },
     order: { groupBy: jest.fn() },
     orderItem: { findMany: jest.fn() },
+    checkoutAttempt: { groupBy: jest.fn() },
   };
   let service: AdminAnalyticsService;
 
@@ -51,6 +53,13 @@ describe('AdminAnalyticsService', () => {
       ledger(LedgerAccount.SELLER, LedgerDirection.DEBIT, '27.00'),
     ]);
     prisma.order.groupBy.mockResolvedValue([]);
+    prisma.checkoutAttempt.groupBy.mockResolvedValue([
+      {
+        status: CheckoutAttemptStatus.SUCCEEDED,
+        _count: { _all: 3 },
+      },
+      { status: CheckoutAttemptStatus.FAILED, _count: { _all: 1 } },
+    ]);
 
     const result = await service.get({
       from: '2026-08-01T00:00:00.000Z',
@@ -81,6 +90,14 @@ describe('AdminAnalyticsService', () => {
     expect(new Date(result.previousPeriod.range.to).getTime()).toBe(
       new Date(result.range.from).getTime() - 1,
     );
+    expect(result.conversion).toEqual({
+      available: true,
+      successfulAttempts: 3,
+      failedAttempts: 1,
+      processingAttempts: 0,
+      totalAttempts: 4,
+      ratePercent: '75.00',
+    });
   });
 
   it('rejects reversed and excessive date ranges', async () => {

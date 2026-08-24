@@ -124,6 +124,22 @@ export function AdminAnalyticsPage() {
                 </article>
               ))
             )}
+            <article>
+              <span>Cart to Order conversion</span>
+              <strong>
+                {data.conversion.ratePercent === null
+                  ? "n/a"
+                  : `${data.conversion.ratePercent}%`}
+              </strong>
+              <small>
+                {data.conversion.successfulAttempts} successful of{" "}
+                {data.conversion.totalAttempts} unique checkout attempts
+              </small>
+              <div>
+                <span>{data.conversion.failedAttempts} failed</span>
+                <span>{data.conversion.processingAttempts} processing</span>
+              </div>
+            </article>
           </div>
           <section className="chart-panel">
             <header>
@@ -199,8 +215,9 @@ export function AdminAnalyticsPage() {
           <p className="analytics-definition">
             Total revenue uses persisted Order totals minus refunds. Platform
             and Seller revenue use ledger credits minus debits. Conversion is
-            unavailable because the backend does not persist a defensible
-            denominator.
+            successful unique checkout attempts divided by all unique checkout
+            attempts created in the selected period; idempotent retries count
+            once.
           </p>
         </>
       )}

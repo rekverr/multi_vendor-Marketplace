@@ -123,5 +123,12 @@ export interface AdminAnalytics {
     delta: string;
     percentChange: string | null;
   }>;
-  conversion: { available: false; reason: string };
+  conversion: {
+    available: boolean;
+    successfulAttempts: number;
+    failedAttempts: number;
+    processingAttempts: number;
+    totalAttempts: number;
+    ratePercent: string | null;
+  };
 }

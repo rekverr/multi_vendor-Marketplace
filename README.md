@@ -196,7 +196,7 @@ Analytics use persisted Order, SellerOrder, OrderItem and ledger snapshots:
 - Product performance excludes cancelled/refunded quantities and amounts.
 - Top Products rank by net gross then net units; top Sellers use recognized Seller ledger revenue.
 - Daily sales use UTC Order creation day; later refunds reduce that day's net sales.
-- Cart-to-order conversion is unavailable because eligible cart/failed-checkout sessions are not persisted, so no defensible denominator exists.
+- Cart-to-order conversion is successful unique checkout attempts divided by all unique checkout attempts created in the selected period; retries with the same Customer/idempotency key count once.
 
 ## Tests and Builds
 
@@ -267,7 +267,6 @@ The final Auction contained exactly one bid, version increased once, and the aut
 - Search, cache and realtime are eventually consistent and may lag PostgreSQL.
 - Auction maintenance uses polling rather than a dedicated scheduler service.
 - Google OAuth requires developer-owned provider credentials and redirect registration.
-- Conversion analytics remain unavailable until eligible cart/checkout-attempt events are persisted.
 - `VITE_API_URL` is build-time configuration.
 - Compose placeholders, TLS and edge routing are operator responsibilities, not production credentials.
 
