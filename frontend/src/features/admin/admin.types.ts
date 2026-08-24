@@ -1,5 +1,11 @@
 import type { OrderStatus } from "../../entities/order/order.types";
-import type { Pagination } from "../../entities/product/product.types";
+import type {
+  NamedReference,
+  Pagination,
+  ProductType,
+  SellerReference,
+} from "../../entities/product/product.types";
+import type { ProductStatus } from "../seller/seller.types";
 
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
 export interface SellerApplication {
@@ -18,6 +24,23 @@ export interface AdminCategory {
   name: string;
   createdAt: string;
   updatedAt: string;
+}
+export interface AdminProduct {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string | null;
+  type: ProductType;
+  price: string | null;
+  stock: number;
+  status: ProductStatus;
+  rejectionReason: string | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  category: NamedReference;
+  seller: SellerReference;
+  moderatedBy: { id: string; email: string } | null;
 }
 export type DisputeStatus =
   | "OPEN"

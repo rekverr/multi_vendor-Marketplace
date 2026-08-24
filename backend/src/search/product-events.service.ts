@@ -5,6 +5,7 @@ import { OutboxService } from '../outbox/outbox.service.js';
 export const PRODUCT_CREATED = 'PRODUCT_CREATED';
 export const PRODUCT_UPDATED = 'PRODUCT_UPDATED';
 export const PRODUCT_PUBLISHED = 'PRODUCT_PUBLISHED';
+export const PRODUCT_REJECTED = 'PRODUCT_REJECTED';
 export const PRODUCT_UNPUBLISHED = 'PRODUCT_UNPUBLISHED';
 export const PRODUCT_ARCHIVED = 'PRODUCT_ARCHIVED';
 

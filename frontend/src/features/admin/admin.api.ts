@@ -3,11 +3,13 @@ import type {
   AdminAnalytics,
   AdminCategory,
   AdminDispute,
+  AdminProduct,
   ApplicationStatus,
   DisputeStatus,
   DisputesResponse,
   SellerApplication,
 } from "./admin.types";
+import type { ProductStatus } from "../seller/seller.types";
 
 function rangeQuery(from?: string, to?: string): string {
   const query = new URLSearchParams();
@@ -60,6 +62,29 @@ export const adminApi = {
     return apiRequest(`/categories/${id}`, {
       method: "DELETE",
       authenticated: true,
+    });
+  },
+  products(
+    status: ProductStatus = "PENDING_REVIEW",
+    signal?: AbortSignal,
+  ): Promise<AdminProduct[]> {
+    return apiRequest(`/admin/products?status=${status}`, {
+      authenticated: true,
+      signal,
+    });
+  },
+  approveProduct(id: string): Promise<AdminProduct> {
+    return apiRequest(`/admin/products/${id}/approve`, {
+      method: "PATCH",
+      authenticated: true,
+      body: {},
+    });
+  },
+  rejectProduct(id: string, reason: string): Promise<AdminProduct> {
+    return apiRequest(`/admin/products/${id}/reject`, {
+      method: "PATCH",
+      authenticated: true,
+      body: { reason },
     });
   },
   disputes(

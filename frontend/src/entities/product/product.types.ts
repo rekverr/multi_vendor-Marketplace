@@ -46,6 +46,7 @@ export interface ProductListResponse {
   items: PublicProduct[];
   facets: Record<string, Record<string, number>>;
   pagination: Pagination;
+  degraded?: boolean;
 }
 
 export interface ProductReview {

@@ -6,6 +6,7 @@ import { AdminCategoriesPage } from "../features/admin/AdminCategoriesPage";
 import { AdminDisputeDetailPage } from "../features/admin/AdminDisputeDetailPage";
 import { AdminDisputesPage } from "../features/admin/AdminDisputesPage";
 import { AdminLayout } from "../features/admin/AdminLayout";
+import { AdminProductsPage } from "../features/admin/AdminProductsPage";
 import { LoginPage } from "../features/auth/LoginPage";
 import { ProtectedRoute } from "../features/auth/ProtectedRoute";
 import { RegisterPage } from "../features/auth/RegisterPage";
@@ -87,6 +88,7 @@ export const router = createBrowserRouter([
               { index: true, element: <AdminAnalyticsPage /> },
               { path: "applications", element: <AdminApplicationsPage /> },
               { path: "categories", element: <AdminCategoriesPage /> },
+              { path: "products", element: <AdminProductsPage /> },
               { path: "disputes", element: <AdminDisputesPage /> },
               {
                 path: "disputes/:disputeId",

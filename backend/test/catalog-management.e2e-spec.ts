@@ -6,8 +6,9 @@ import type { App } from 'supertest/types.js';
 
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
+import { CatalogCacheService } from '../src/cache/catalog-cache.service.js';
 import { PrismaService } from '../src/database/prisma.service.js';
-import { UserRole } from '../src/generated/prisma/client.js';
+import { ProductStatus, UserRole } from '../src/generated/prisma/client.js';
 import { bodyOf, type ApiResponseBody } from './helpers/http-response.js';
 
 const PASSWORD = 'correct-horse-battery-staple';
@@ -20,6 +21,7 @@ const CUSTOMER_EMAIL = `${TEST_PREFIX}-customer@example.com`;
 describe('Category and Seller Product management (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
+  let cache: CatalogCacheService;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -30,6 +32,7 @@ describe('Category and Seller Product management (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
+    cache = app.get(CatalogCacheService);
   });
 
   beforeEach(async () => {
@@ -260,6 +263,131 @@ describe('Category and Seller Product management (e2e)', () => {
       .patch(`/seller/products/${product.id}/request-publication`)
       .set('Authorization', `Bearer ${sellerToken}`)
       .expect(409);
+  });
+
+  it('publishes a Seller Product only through Admin moderation', async () => {
+    const adminToken = await createAdminAndLogin();
+    const sellerToken = await createApprovedSeller(
+      SELLER_A_EMAIL,
+      'Moderated Seller',
+      adminToken,
+    );
+    const category = await createCategory(adminToken, 'Moderation');
+    const product = await createProduct(sellerToken, category.id);
+
+    await request(app.getHttpServer())
+      .patch(`/seller/products/${product.id}/request-publication`)
+      .set('Authorization', `Bearer ${sellerToken}`)
+      .expect(200);
+
+    const pending = await request(app.getHttpServer())
+      .get('/admin/products')
+      .query({ status: ProductStatus.PENDING_REVIEW })
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(bodyOf<ApiResponseBody[]>(pending)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: product.id,
+          status: ProductStatus.PENDING_REVIEW,
+        }),
+      ]),
+    );
+
+    await request(app.getHttpServer())
+      .patch(`/admin/products/${product.id}/approve`)
+      .set('Authorization', `Bearer ${sellerToken}`)
+      .send({})
+      .expect(403);
+
+    await cache.setProduct(product.id, {
+      id: product.id,
+      title: 'Stale cached Product',
+    });
+    const approved = await request(app.getHttpServer())
+      .patch(`/admin/products/${product.id}/approve`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({})
+      .expect(200);
+    expect(bodyOf(approved)).toMatchObject({
+      id: product.id,
+      status: ProductStatus.PUBLISHED,
+      rejectionReason: null,
+    });
+    expect(
+      bodyOf<{ moderatedAt: string | null }>(approved).moderatedAt,
+    ).not.toBeNull();
+
+    const persisted = await prisma.product.findUniqueOrThrow({
+      where: { id: product.id },
+    });
+    expect(persisted.status).toBe(ProductStatus.PUBLISHED);
+    expect(persisted.publishedAt).not.toBeNull();
+    expect(
+      await prisma.outboxEvent.count({
+        where: {
+          aggregateId: product.id,
+          eventType: 'PRODUCT_PUBLISHED',
+        },
+      }),
+    ).toBe(1);
+
+    const catalog = await request(app.getHttpServer())
+      .get('/products')
+      .expect(200);
+    expect(bodyOf(catalog).items).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: product.id })]),
+    );
+
+    const detail = await request(app.getHttpServer())
+      .get(`/products/${product.id}`)
+      .expect(200);
+    expect(bodyOf(detail).title).toBe('Mechanical Keyboard');
+
+    await request(app.getHttpServer())
+      .patch(`/admin/products/${product.id}/approve`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({})
+      .expect(409);
+  });
+
+  it('rejects a pending Product and keeps it private', async () => {
+    const adminToken = await createAdminAndLogin();
+    const sellerToken = await createApprovedSeller(
+      SELLER_A_EMAIL,
+      'Rejected Seller',
+      adminToken,
+    );
+    const category = await createCategory(adminToken, 'Rejection');
+    const product = await createProduct(sellerToken, category.id);
+
+    await request(app.getHttpServer())
+      .patch(`/seller/products/${product.id}/request-publication`)
+      .set('Authorization', `Bearer ${sellerToken}`)
+      .expect(200);
+
+    const rejected = await request(app.getHttpServer())
+      .patch(`/admin/products/${product.id}/reject`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ reason: 'Description requires clarification.' })
+      .expect(200);
+    expect(bodyOf(rejected)).toMatchObject({
+      id: product.id,
+      status: ProductStatus.REJECTED,
+      rejectionReason: 'Description requires clarification.',
+    });
+
+    await request(app.getHttpServer())
+      .get(`/products/${product.id}`)
+      .expect(404);
+    expect(
+      await prisma.outboxEvent.count({
+        where: {
+          aggregateId: product.id,
+          eventType: 'PRODUCT_REJECTED',
+        },
+      }),
+    ).toBe(1);
   });
 
   it('prevents deletion of a Category referenced by a Product', async () => {

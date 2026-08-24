@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  ServiceUnavailableException,
 } from '@nestjs/common';
 import { Prisma, ProductStatus } from '../generated/prisma/client.js';
 import { PrismaService } from '../database/prisma.service.js';
@@ -66,6 +65,15 @@ export class PublicProductsService {
       throw new BadRequestException('minPrice must not exceed maxPrice');
     }
 
+    const authoritativeWhere = this.buildAuthoritativeWhere(
+      query,
+      minPrice,
+      maxPrice,
+    );
+    const authoritativeTotal = await this.prisma.product.count({
+      where: authoritativeWhere,
+    });
+
     const filters = [
       query.categoryId ? `categoryId = "${query.categoryId}"` : undefined,
       query.sellerId ? `sellerId = "${query.sellerId}"` : undefined,
@@ -93,12 +101,29 @@ export class PublicProductsService {
       const total = result.estimatedTotalHits ?? result.hits.length;
       const ids = result.hits.map((hit) => hit.id);
       const products = await this.prisma.product.findMany({
-        where: { id: { in: ids }, status: ProductStatus.PUBLISHED },
+        where: { AND: [authoritativeWhere, { id: { in: ids } }] },
         select: publicProductSelect,
       });
       const productsById = new Map(
         products.map((product) => [product.id, product]),
       );
+      const expectedPageSize = Math.min(
+        query.pageSize,
+        Math.max(authoritativeTotal - (query.page - 1) * query.pageSize, 0),
+      );
+
+      if (
+        total !== authoritativeTotal ||
+        ids.length !== expectedPageSize ||
+        products.length !== expectedPageSize
+      ) {
+        return this.listFromPostgres(
+          query,
+          authoritativeWhere,
+          authoritativeTotal,
+        );
+      }
+
       return {
         items: ids.flatMap((id) => {
           const product = productsById.get(id);
@@ -113,10 +138,11 @@ export class PublicProductsService {
         },
       };
     } catch {
-      throw new ServiceUnavailableException({
-        message: 'Product search is temporarily unavailable',
-        degraded: true,
-      });
+      return this.listFromPostgres(
+        query,
+        authoritativeWhere,
+        authoritativeTotal,
+      );
     }
   }
 
@@ -136,5 +162,128 @@ export class PublicProductsService {
 
     await this.cache.setProduct(id, product);
     return product;
+  }
+
+  private buildAuthoritativeWhere(
+    query: PublicProductQueryDto,
+    minPrice?: Prisma.Decimal,
+    maxPrice?: Prisma.Decimal,
+  ): Prisma.ProductWhereInput {
+    const text = query.q?.trim();
+    return {
+      status: ProductStatus.PUBLISHED,
+      categoryId: query.categoryId,
+      sellerId: query.sellerId,
+      price:
+        minPrice || maxPrice
+          ? {
+              gte: minPrice,
+              lte: maxPrice,
+            }
+          : undefined,
+      stock:
+        query.available === undefined
+          ? undefined
+          : query.available
+            ? { gt: 0 }
+            : 0,
+      OR: text
+        ? [
+            { title: { contains: text, mode: 'insensitive' } },
+            { description: { contains: text, mode: 'insensitive' } },
+            {
+              category: {
+                name: { contains: text, mode: 'insensitive' },
+              },
+            },
+            {
+              seller: {
+                displayName: { contains: text, mode: 'insensitive' },
+              },
+            },
+          ]
+        : undefined,
+    };
+  }
+
+  private async listFromPostgres(
+    query: PublicProductQueryDto,
+    where: Prisma.ProductWhereInput,
+    total: number,
+  ) {
+    const orderByBySort = {
+      [ProductSearchSort.NEWEST]: [
+        { publishedAt: { sort: 'desc', nulls: 'last' } },
+        { id: 'asc' },
+      ],
+      [ProductSearchSort.PRICE_ASC]: [
+        { price: { sort: 'asc', nulls: 'last' } },
+        { id: 'asc' },
+      ],
+      [ProductSearchSort.PRICE_DESC]: [
+        { price: { sort: 'desc', nulls: 'last' } },
+        { id: 'asc' },
+      ],
+    } satisfies Record<
+      ProductSearchSort,
+      Prisma.ProductOrderByWithRelationInput[]
+    >;
+    const orderBy = orderByBySort[query.sort];
+
+    const [items, category, seller, type, available, unavailable] =
+      await Promise.all([
+        this.prisma.product.findMany({
+          where,
+          select: publicProductSelect,
+          orderBy,
+          skip: (query.page - 1) * query.pageSize,
+          take: query.pageSize,
+        }),
+        this.prisma.product.groupBy({
+          by: ['categoryId'],
+          where,
+          _count: { _all: true },
+        }),
+        this.prisma.product.groupBy({
+          by: ['sellerId'],
+          where,
+          _count: { _all: true },
+        }),
+        this.prisma.product.groupBy({
+          by: ['type'],
+          where,
+          _count: { _all: true },
+        }),
+        this.prisma.product.count({
+          where: { AND: [where, { stock: { gt: 0 } }] },
+        }),
+        this.prisma.product.count({ where: { AND: [where, { stock: 0 }] } }),
+      ]);
+
+    return {
+      items,
+      facets: {
+        categoryId: Object.fromEntries(
+          category.map((entry) => [entry.categoryId, entry._count._all]),
+        ),
+        sellerId: Object.fromEntries(
+          seller.map((entry) => [entry.sellerId, entry._count._all]),
+        ),
+        type: Object.fromEntries(
+          type.map((entry) => [entry.type, entry._count._all]),
+        ),
+        inStock: {
+          true: available,
+          false: unavailable,
+        },
+      },
+      pagination: {
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+        totalPages: Math.ceil(total / query.pageSize),
+      },
+      degraded: true,
+    };
   }
 }

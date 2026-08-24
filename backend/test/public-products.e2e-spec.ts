@@ -73,6 +73,27 @@ describe('Public Product catalog (e2e)', () => {
     await request(app.getHttpServer()).get(`/products/${draftId}`).expect(404);
   });
 
+  it('returns an authoritative published Product missing from the search projection', async () => {
+    const product = await createProduct(
+      'Projection Lag Product',
+      sellerAId,
+      categoryAId,
+      '55.00',
+      2,
+      5,
+    );
+
+    const list = await request(app.getHttpServer())
+      .get('/products')
+      .query({ q: 'Projection Lag Product' })
+      .expect(200);
+
+    expect(bodyOf(list).items).toEqual([
+      expect.objectContaining({ id: product.id, title: product.title }),
+    ]);
+    expect(bodyOf(list)).toMatchObject({ degraded: true });
+  });
+
   it('filters by Category, Seller, price range and availability', async () => {
     const byCategory = await request(app.getHttpServer())
       .get('/products')

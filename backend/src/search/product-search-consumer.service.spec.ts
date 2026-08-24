@@ -4,7 +4,7 @@ import {
   ProductType,
   Prisma,
 } from '../generated/prisma/client.js';
-import { PRODUCT_UPDATED } from './product-events.service.js';
+import { PRODUCT_REJECTED, PRODUCT_UPDATED } from './product-events.service.js';
 import { ProductSearchConsumerService } from './product-search-consumer.service.js';
 
 describe('ProductSearchConsumerService', () => {
@@ -64,6 +64,46 @@ describe('ProductSearchConsumerService', () => {
 
     expect(search.upsertProduct).toHaveBeenCalledTimes(1);
     expect(cache.invalidateProduct).toHaveBeenCalledTimes(1);
+    expect(prisma.processedEvent.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('removes a rejected Product from search and invalidates its cache', async () => {
+    const prisma = {
+      processedEvent: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({}),
+      },
+      product: {
+        findUnique: jest.fn().mockResolvedValue({
+          status: ProductStatus.REJECTED,
+        }),
+      },
+    };
+    const search = { deleteProduct: jest.fn().mockResolvedValue(undefined) };
+    const cache = { invalidateProduct: jest.fn().mockResolvedValue(undefined) };
+    const consumer = new ProductSearchConsumerService(
+      {} as never,
+      prisma as never,
+      search as never,
+      cache as never,
+    );
+    const productId = '00000000-0000-4000-8000-000000000006';
+
+    await consumer.process({
+      data: {
+        eventId: '00000000-0000-4000-8000-000000000007',
+        eventType: PRODUCT_REJECTED,
+        aggregateType: 'Product',
+        aggregateId: productId,
+        occurredAt: new Date().toISOString(),
+        correlationId: '00000000-0000-4000-8000-000000000008',
+        schemaVersion: 1,
+        payload: {},
+      },
+    } as never);
+
+    expect(search.deleteProduct).toHaveBeenCalledWith(productId);
+    expect(cache.invalidateProduct).toHaveBeenCalledWith(productId);
     expect(prisma.processedEvent.create).toHaveBeenCalledTimes(1);
   });
 });
