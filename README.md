@@ -262,7 +262,7 @@ k6 run load-tests/scarce-stock-checkout.js
 
 This second scenario requires exactly one successful checkout, four expected inventory conflicts, final stock `0` and zero oversells. Actual checkout measurements must be recorded only after executing it against disposable local data.
 
-Measured locally on 2026-08-24 with 20 concurrent bidders submitting the same `1000.00` bid:
+Measured locally on 2026-08-24 with 20 concurrent bidders submitting the same `1000.00` bid. This date is from the actual k6 `handleSummary` timestamp, not a placeholder; see the [captured JSON report](./load-tests/results/auction-bidding-local-005.json) and [load-test methodology](./load-tests/README.md):
 
 - bid RPS: `5.77`;
 - bid-request p95 latency: `109.41 ms`;

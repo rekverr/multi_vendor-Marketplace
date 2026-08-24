@@ -1,0 +1,18 @@
+{
+  "measuredAt": "2026-08-24T11:00:27.103Z",
+  "configuration": {
+    "baseUrl": "http://localhost:3000",
+    "auctionId": "271c1c2a-6aad-4857-9cbd-af2e8a43a3fb",
+    "bidders": 20,
+    "bidAmount": "1000.00",
+    "p95LimitMs": 5000
+  },
+  "measurements": {
+    "rps": 5.765945289251529,
+    "p95LatencyMs": 109.40969999999999,
+    "successCount": 1,
+    "expectedBusinessRejectionCount": 19,
+    "unexpectedErrorCount": 0,
+    "finalCorrectnessCount": 1
+  }
+}

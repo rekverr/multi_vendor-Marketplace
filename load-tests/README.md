@@ -69,6 +69,8 @@ Measured at `2026-08-24T11:00:27.103Z` using:
 - run identity: `local-005`;
 - p95 threshold: `5000 ms`.
 
+This is an actual captured run, not a placeholder date. The timestamp was emitted automatically by `handleSummary` through `new Date().toISOString()`, so it is UTC (`Z`); it corresponds to `2026-08-24 14:00:27 EEST` on the test machine. The captured machine-readable summary is stored at [`results/auction-bidding-local-005.json`](./results/auction-bidding-local-005.json). The Auction UUID in that file identifies disposable local test data and is not a reusable fixture.
+
 Measured output:
 
 - bid RPS: `5.765945289251529`;
