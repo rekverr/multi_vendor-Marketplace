@@ -83,7 +83,7 @@ cp frontend/.env.example frontend/.env
 | `OUTBOX_PUBLISHER_ENABLED` | Async publisher toggle | `true` |
 | `PLATFORM_COMMISSION_RATE` | Decimal commission rate | `0.100000` |
 | `ORDER_CURRENCY` | Three-letter currency | `USD` |
-| `AUCTION_MAINTENANCE_ENABLED` | Auction maintenance polling | `true` |
+| `AUCTION_MAINTENANCE_ENABLED` | BullMQ Auction maintenance scheduler | `true` |
 
 The example files contain all optional timing/batch variables. Frontend uses only public `VITE_API_URL`; secrets must never use the `VITE_` prefix.
 
@@ -265,7 +265,6 @@ The final Auction contained exactly one bid, version increased once, and the aut
 - No external payment gateway or settlement integration.
 - No configured email/SMS notification provider.
 - Search, cache and realtime are eventually consistent and may lag PostgreSQL.
-- Auction maintenance uses polling rather than a dedicated scheduler service.
 - Google OAuth requires developer-owned provider credentials and redirect registration.
 - `VITE_API_URL` is build-time configuration.
 - Compose placeholders, TLS and edge routing are operator responsibilities, not production credentials.

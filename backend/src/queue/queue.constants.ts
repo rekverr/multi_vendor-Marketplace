@@ -1,5 +1,8 @@
 export const DOMAIN_EVENTS_QUEUE = 'domain-events';
 export const REALTIME_EVENTS_QUEUE = 'realtime-events';
+export const AUCTION_MAINTENANCE_QUEUE = 'auction-maintenance';
+export const AUCTION_MAINTENANCE_JOB = 'auction-maintenance-scan';
+export const AUCTION_MAINTENANCE_SCHEDULER = 'auction-maintenance-scheduler-v1';
 
 export const DEFAULT_JOB_OPTIONS = {
   attempts: 5,
