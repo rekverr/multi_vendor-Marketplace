@@ -1,20 +1,15 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: marketplace-postgres
     restart: unless-stopped
-
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: change-me
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
       POSTGRES_DB: marketplace
-
     ports:
       - "5433:5432"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d marketplace"]
       interval: 5s
@@ -24,15 +19,11 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: marketplace-redis
     restart: unless-stopped
-
     ports:
       - "6379:6379"
-
     volumes:
       - redis_data:/data
-
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -42,19 +33,14 @@ services:
 
   meilisearch:
     image: getmeili/meilisearch:v1.15
-    container_name: marketplace-meilisearch
     restart: unless-stopped
-
     environment:
       MEILI_ENV: development
-      MEILI_MASTER_KEY: change-me-meili-key
-
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-change-me-meili-key}
     ports:
       - "7700:7700"
-
     volumes:
       - meili_data:/meili_data
-
     healthcheck:
       test:
         [
@@ -64,6 +50,95 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 5s
+
+  backend-migrate:
+    build:
+      context: ./backend
+      target: build
+    environment:
+      DATABASE_URL: postgresql://admin:${POSTGRES_PASSWORD:-change-me}@postgres:5432/marketplace?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    init: true
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      DATABASE_URL: postgresql://admin:${POSTGRES_PASSWORD:-change-me}@postgres:5432/marketplace?schema=public
+      REDIS_URL: redis://redis:6379
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-change-me-meili-key}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-local-only-jwt-secret-replace-before-deploying}
+      JWT_ACCESS_TTL_SECONDS: ${JWT_ACCESS_TTL_SECONDS:-900}
+      JWT_REFRESH_TTL_SECONDS: ${JWT_REFRESH_TTL_SECONDS:-2592000}
+      JWT_ISSUER: ${JWT_ISSUER:-marketplace-api}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-marketplace-client}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-local-google-client-id}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-local-google-client-secret}
+      GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-http://localhost:5173/auth/google/callback}
+      GOOGLE_OAUTH_STATE_TTL_SECONDS: ${GOOGLE_OAUTH_STATE_TTL_SECONDS:-600}
+      OUTBOX_PUBLISHER_ENABLED: ${OUTBOX_PUBLISHER_ENABLED:-true}
+      PLATFORM_COMMISSION_RATE: ${PLATFORM_COMMISSION_RATE:-0.100000}
+      ORDER_CURRENCY: ${ORDER_CURRENCY:-USD}
+      AUCTION_WINNER_CHECKOUT_WINDOW_SECONDS: ${AUCTION_WINNER_CHECKOUT_WINDOW_SECONDS:-86400}
+      AUCTION_MAINTENANCE_ENABLED: ${AUCTION_MAINTENANCE_ENABLED:-true}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend-migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      target: runtime
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    restart: unless-stopped
+    ports:
+      - "5173:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/health",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
       start_period: 5s
 
 volumes:
