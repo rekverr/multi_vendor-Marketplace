@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { createHash } from 'node:crypto';
@@ -15,6 +16,7 @@ import {
   UserRole,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../database/prisma.service.js';
+import { structuredLog } from '../common/structured-log.js';
 import { OutboxService } from '../outbox/outbox.service.js';
 import { PRODUCT_UPDATED } from '../search/product-events.service.js';
 import { deriveOrderStatus } from './domain/order-status.policy.js';
@@ -37,6 +39,7 @@ type Transaction = Prisma.TransactionClient;
 
 @Injectable()
 export class OrderAdjustmentsService {
+  private readonly logger = new Logger(OrderAdjustmentsService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
@@ -47,7 +50,7 @@ export class OrderAdjustmentsService {
     orderId: string,
     correlationId: string,
   ) {
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const order = await this.lockOwnedOrder(tx, orderId, customerId);
       const sellerOrders = await tx.$queryRaw<
         Array<{ id: string; status: SellerOrderStatus }>
@@ -93,6 +96,14 @@ export class OrderAdjustmentsService {
         include: { sellerOrders: { include: { items: true } } },
       });
     });
+    this.logger.log(
+      structuredLog('ORDER_CANCELLED', {
+        correlationId,
+        orderId: result.id,
+        status: result.status,
+      }),
+    );
+    return result;
   }
 
   async cancelSellerOrder(
@@ -107,7 +118,7 @@ export class OrderAdjustmentsService {
     });
     if (!owned) throw new NotFoundException('SellerOrder not found');
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const order = await this.lockOwnedOrder(tx, orderId, customerId);
       const locked = await tx.$queryRaw<
         Array<{ id: string; status: SellerOrderStatus }>
@@ -146,6 +157,15 @@ export class OrderAdjustmentsService {
       );
       return { ...cancelled, orderStatus: parent.status };
     });
+    this.logger.log(
+      structuredLog('SELLER_ORDER_CANCELLED', {
+        correlationId,
+        orderId,
+        sellerOrderId: result.id,
+        orderStatus: 'orderStatus' in result ? result.orderStatus : undefined,
+      }),
+    );
+    return result;
   }
 
   async refundItem(
@@ -171,7 +191,7 @@ export class OrderAdjustmentsService {
     if (!owned) throw new NotFoundException('SellerOrder not found');
 
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      const refund = await this.prisma.$transaction(async (tx) => {
         await this.lockOrder(tx, owned.orderId);
         const lockedSellerOrders = await tx.$queryRaw<
           Array<{
@@ -303,6 +323,17 @@ export class OrderAdjustmentsService {
         });
         return refund;
       });
+      this.logger.log(
+        structuredLog('REFUND_CREATED', {
+          correlationId,
+          refundId: refund.id,
+          orderId: refund.orderId,
+          sellerOrderId: refund.sellerOrderId,
+          quantity: refund.quantity,
+          amount: refund.amount.toFixed(2),
+        }),
+      );
+      return refund;
     } catch (error) {
       if (this.isUniqueConflict(error)) {
         const concurrent = await this.findRefund(userId, idempotencyKey);

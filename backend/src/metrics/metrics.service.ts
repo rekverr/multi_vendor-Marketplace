@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { collectDefaultMetrics, Counter, Gauge, Registry } from 'prom-client';
+import {
+  collectDefaultMetrics,
+  Counter,
+  Gauge,
+  Histogram,
+  Registry,
+} from 'prom-client';
 
 @Injectable()
 export class MetricsService {
@@ -10,6 +16,10 @@ export class MetricsService {
   private readonly outboxBacklog: Gauge;
   private readonly auctionBidsAcceptedTotal: Counter;
   private readonly auctionBidsRejectedTotal: Counter;
+  private readonly checkoutSucceededTotal: Counter;
+  private readonly checkoutFailedTotal: Counter;
+  private readonly inventoryConflictsTotal: Counter;
+  private readonly queueProcessingDuration: Histogram<'queue'>;
 
   constructor() {
     this.registry = new Registry();
@@ -51,10 +61,35 @@ export class MetricsService {
       help: 'Number of rejected Auction bids',
       registers: [this.registry],
     });
+    this.checkoutSucceededTotal = new Counter({
+      name: 'marketplace_checkout_succeeded_total',
+      help: 'Number of committed checkout transactions',
+      registers: [this.registry],
+    });
+    this.checkoutFailedTotal = new Counter({
+      name: 'marketplace_checkout_failed_total',
+      help: 'Number of terminal checkout failures',
+      registers: [this.registry],
+    });
+    this.inventoryConflictsTotal = new Counter({
+      name: 'marketplace_inventory_conflicts_total',
+      help: 'Number of checkout requests rejected by inventory concurrency or stock validation',
+      registers: [this.registry],
+    });
+    this.queueProcessingDuration = new Histogram({
+      name: 'marketplace_queue_job_processing_duration_seconds',
+      help: 'Queue job processing duration in seconds',
+      labelNames: ['queue'],
+      buckets: [0.01, 0.05, 0.1, 0.5, 1, 5, 15, 30],
+      registers: [this.registry],
+    });
   }
 
-  recordQueueProcessed(queue: string): void {
+  recordQueueProcessed(queue: string, durationSeconds?: number): void {
     this.queueProcessedTotal.inc({ queue });
+    if (durationSeconds !== undefined && durationSeconds >= 0) {
+      this.queueProcessingDuration.observe({ queue }, durationSeconds);
+    }
   }
 
   recordQueueFailed(queue: string): void {
@@ -75,6 +110,18 @@ export class MetricsService {
 
   recordAuctionBidRejected(): void {
     this.auctionBidsRejectedTotal.inc();
+  }
+
+  recordCheckoutSucceeded(): void {
+    this.checkoutSucceededTotal.inc();
+  }
+
+  recordCheckoutFailed(): void {
+    this.checkoutFailedTotal.inc();
+  }
+
+  recordInventoryConflict(): void {
+    this.inventoryConflictsTotal.inc();
   }
 
   get contentType(): string {

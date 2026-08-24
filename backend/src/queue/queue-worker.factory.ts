@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Processor, Worker } from 'bullmq';
 import type { Redis } from 'ioredis';
+import { safeErrorMessage, structuredLog } from '../common/structured-log.js';
 import { MetricsService } from '../metrics/metrics.service.js';
 import { RedisConnectionService } from './redis-connection.service.js';
 
@@ -26,23 +27,32 @@ export class QueueWorkerFactory implements OnModuleDestroy {
       concurrency,
     });
 
-    worker.on('completed', () => this.metrics.recordQueueProcessed(queueName));
+    worker.on('completed', (job) => {
+      const durationSeconds =
+        job.processedOn && job.finishedOn
+          ? Math.max(0, job.finishedOn - job.processedOn) / 1000
+          : undefined;
+      this.metrics.recordQueueProcessed(queueName, durationSeconds);
+    });
     worker.on('failed', (job, error) => {
       this.metrics.recordQueueFailed(queueName);
-      this.logger.error({
-        event: 'QUEUE_JOB_FAILED',
-        queue: queueName,
-        jobId: job?.id,
-        attempt: job?.attemptsMade,
-        error: error.message,
-      });
+      this.logger.error(
+        structuredLog('QUEUE_JOB_FAILED', {
+          queue: queueName,
+          jobId: job?.id,
+          attempt: job?.attemptsMade,
+          correlationId: this.correlationId(job?.data),
+          error: safeErrorMessage(error),
+        }),
+      );
     });
     worker.on('error', (error) => {
-      this.logger.error({
-        event: 'QUEUE_WORKER_ERROR',
-        queue: queueName,
-        error: error.message,
-      });
+      this.logger.error(
+        structuredLog('QUEUE_WORKER_ERROR', {
+          queue: queueName,
+          error: safeErrorMessage(error),
+        }),
+      );
     });
 
     this.workers.add(worker);
@@ -55,5 +65,17 @@ export class QueueWorkerFactory implements OnModuleDestroy {
     await Promise.all(
       [...this.clients.values()].map((client) => client.quit()),
     );
+  }
+
+  private correlationId(data: unknown): string | undefined {
+    if (
+      typeof data === 'object' &&
+      data !== null &&
+      'correlationId' in data &&
+      typeof data.correlationId === 'string'
+    ) {
+      return data.correlationId;
+    }
+    return undefined;
   }
 }

@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 
+import { CorrelationId } from '../common/correlation-id.decorator.js';
 import { AuthService } from './auth.service.js';
 import { CurrentUser } from './current-user.decorator.js';
 import { GoogleCallbackDto } from './dto/google-callback.dto.js';
@@ -43,8 +44,8 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log in with email and password' })
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  login(@Body() dto: LoginDto, @CorrelationId() correlationId: string) {
+    return this.authService.login(dto, correlationId);
   }
 
   @Post('refresh')

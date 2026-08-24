@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -13,6 +14,7 @@ import {
 } from 'node:crypto';
 
 import { OAuthProvider, Prisma, UserRole } from '../generated/prisma/client.js';
+import { structuredLog } from '../common/structured-log.js';
 import { PrismaService } from '../database/prisma.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -39,6 +41,7 @@ export interface AuthResponse extends AuthTokens {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private readonly accessSecret: string;
   private readonly accessTtlSeconds: number;
   private readonly refreshTtlSeconds: number;
@@ -88,7 +91,7 @@ export class AuthService {
     }
   }
 
-  async login(dto: LoginDto): Promise<AuthResponse> {
+  async login(dto: LoginDto, correlationId?: string): Promise<AuthResponse> {
     const email = this.normalizeEmail(dto.email);
     const user = await this.prisma.user.findUnique({ where: { email } });
     const passwordIsValid =
@@ -96,6 +99,12 @@ export class AuthService {
       (await this.passwordHasher.verify(dto.password, user.passwordHash));
 
     if (!user || !passwordIsValid) {
+      this.logger.warn(
+        structuredLog('AUTH_LOGIN_FAILED', {
+          correlationId,
+          reason: 'INVALID_CREDENTIALS',
+        }),
+      );
       throw new UnauthorizedException('Invalid email or password');
     }
 

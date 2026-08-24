@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -9,6 +10,7 @@ import {
   UserRole,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../database/prisma.service.js';
+import { structuredLog } from '../common/structured-log.js';
 import { OutboxService } from '../outbox/outbox.service.js';
 import {
   canTransitionSellerOrder,
@@ -57,6 +59,7 @@ const customerOrderSelect = {
 
 @Injectable()
 export class OrderLifecycleService {
+  private readonly logger = new Logger(OrderLifecycleService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
@@ -101,7 +104,7 @@ export class OrderLifecycleService {
     });
     if (!owned) throw new NotFoundException('SellerOrder not found');
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const lockedParents = await tx.$queryRaw<
         Array<{ id: string; status: string }>
       >(Prisma.sql`
@@ -175,6 +178,16 @@ export class OrderLifecycleService {
 
       return { ...sellerOrder, orderStatus: parent.status };
     });
+    this.logger.log(
+      structuredLog('SELLER_ORDER_STATUS_CHANGED', {
+        correlationId,
+        sellerOrderId: result.id,
+        orderId: result.orderId,
+        status: result.status,
+        orderStatus: result.orderStatus,
+      }),
+    );
+    return result;
   }
 
   async listCustomerOrders(userId: string, query: ListOrdersQueryDto) {

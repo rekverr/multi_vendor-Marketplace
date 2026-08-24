@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
@@ -16,6 +17,8 @@ import {
   UserRole,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../database/prisma.service.js';
+import { safeErrorMessage, structuredLog } from '../common/structured-log.js';
+import { MetricsService } from '../metrics/metrics.service.js';
 import { OutboxService } from '../outbox/outbox.service.js';
 import { PRODUCT_UPDATED } from '../search/product-events.service.js';
 import { calculateSellerOrderFinancials } from './domain/commission.policy.js';
@@ -44,12 +47,14 @@ interface CheckoutLine {
 
 @Injectable()
 export class CheckoutService {
+  private readonly logger = new Logger(CheckoutService.name);
   private readonly commissionRate: Prisma.Decimal;
   private readonly currency: string;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
+    private readonly metrics: MetricsService,
     config: ConfigService,
   ) {
     this.commissionRate = new Prisma.Decimal(
@@ -68,16 +73,33 @@ export class CheckoutService {
     const requestHash = this.createRequestHash(requestContext);
 
     const existing = await this.findIdempotency(customerId, idempotencyKey);
-    if (existing) return this.resolveExisting(existing, requestHash);
+    if (existing) {
+      try {
+        return await this.resolveExisting(existing, requestHash);
+      } catch (error) {
+        this.recordCheckoutFailure(error, correlationId);
+        throw error;
+      }
+    }
 
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
-        return await this.executeTransaction(
+        const order = await this.executeTransaction(
           customerId,
           idempotencyKey,
           correlationId,
           requestHash,
         );
+        this.metrics.recordCheckoutSucceeded();
+        this.logger.log(
+          structuredLog('ORDER_CREATED', {
+            correlationId,
+            orderId: order.id,
+            sellerOrderCount: order.sellerOrders.length,
+            currency: order.currency,
+          }),
+        );
+        return order;
       } catch (error) {
         if (this.isIdempotencyConflict(error)) {
           const concurrent = await this.findIdempotency(
@@ -88,15 +110,20 @@ export class CheckoutService {
         }
         if (this.isSerializationFailure(error)) {
           if (attempt < 3) continue;
-          throw new ConflictException(
+          const conflict = new ConflictException(
             'Checkout conflicted with another inventory update',
           );
+          this.recordCheckoutFailure(conflict, correlationId, true);
+          throw conflict;
         }
+        this.recordCheckoutFailure(error, correlationId);
         throw error;
       }
     }
 
-    throw new ConflictException('Checkout could not be completed');
+    const error = new ConflictException('Checkout could not be completed');
+    this.recordCheckoutFailure(error, correlationId);
+    throw error;
   }
 
   private executeTransaction(
@@ -334,6 +361,31 @@ export class CheckoutService {
       groups.set(line.product.sellerId, existing);
     }
     return groups;
+  }
+
+  private recordCheckoutFailure(
+    error: unknown,
+    correlationId: string,
+    inventoryConflict = false,
+  ): void {
+    const reason = safeErrorMessage(error);
+    const stockConflict =
+      inventoryConflict ||
+      reason === 'Insufficient Product stock' ||
+      reason.includes('inventory update');
+    this.metrics.recordCheckoutFailed();
+    if (stockConflict) {
+      this.metrics.recordInventoryConflict();
+      this.logger.warn(
+        structuredLog('INVENTORY_DECREMENT_REJECTED', {
+          correlationId,
+          reason,
+        }),
+      );
+    }
+    this.logger.warn(
+      structuredLog('CHECKOUT_REJECTED', { correlationId, reason }),
+    );
   }
 
   private findIdempotency(customerId: string, idempotencyKey: string) {

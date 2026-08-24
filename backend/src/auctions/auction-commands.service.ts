@@ -14,6 +14,7 @@ import {
   UserRole,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../database/prisma.service.js';
+import { safeErrorMessage, structuredLog } from '../common/structured-log.js';
 import { MetricsService } from '../metrics/metrics.service.js';
 import { OutboxService } from '../outbox/outbox.service.js';
 import {
@@ -173,12 +174,13 @@ export class AuctionCommandsService {
 
       if (!result.replayed) {
         this.metrics.recordAuctionBidAccepted();
-        this.logger.log({
-          event: 'AUCTION_BID_ACCEPTED',
-          auctionId,
-          bidId: result.bid.id,
-          correlationId,
-        });
+        this.logger.log(
+          structuredLog('AUCTION_BID_ACCEPTED', {
+            auctionId,
+            bidId: result.bid.id,
+            correlationId,
+          }),
+        );
       }
       return result.bid;
     } catch (error) {
@@ -187,12 +189,13 @@ export class AuctionCommandsService {
         if (concurrent) return this.resolveBid(concurrent, auctionId, amount);
       }
       this.metrics.recordAuctionBidRejected();
-      this.logger.warn({
-        event: 'AUCTION_BID_REJECTED',
-        auctionId,
-        correlationId,
-        reason: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        structuredLog('AUCTION_BID_REJECTED', {
+          auctionId,
+          correlationId,
+          reason: safeErrorMessage(error),
+        }),
+      );
       throw error;
     }
   }
@@ -259,12 +262,13 @@ export class AuctionCommandsService {
     });
 
     if (result.changed) {
-      this.logger.log({
-        event: 'AUCTION_FINALIZED',
-        auctionId,
-        status: result.auction.status,
-        correlationId,
-      });
+      this.logger.log(
+        structuredLog('AUCTION_FINALIZED', {
+          auctionId,
+          status: result.auction.status,
+          correlationId,
+        }),
+      );
     }
     return result.auction;
   }

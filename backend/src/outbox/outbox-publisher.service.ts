@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
+import { safeErrorMessage, structuredLog } from '../common/structured-log.js';
 import { OutboxEvent, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../database/prisma.service.js';
 import { MetricsService } from '../metrics/metrics.service.js';
@@ -61,10 +62,11 @@ export class OutboxPublisherService
     try {
       await this.publishPending();
     } catch (error) {
-      this.logger.error({
-        event: 'OUTBOX_PUBLISHER_POLL_FAILED',
-        error: this.errorMessage(error),
-      });
+      this.logger.error(
+        structuredLog('OUTBOX_PUBLISHER_POLL_FAILED', {
+          error: safeErrorMessage(error),
+        }),
+      );
     } finally {
       this.polling = false;
     }
@@ -124,7 +126,7 @@ export class OutboxPublisherService
     } catch (error) {
       const attempt = event.attemptCount + 1;
       const delayMs = Math.min(300000, 1000 * 2 ** Math.min(attempt - 1, 8));
-      const message = this.errorMessage(error).slice(0, 2000);
+      const message = safeErrorMessage(error).slice(0, 2000);
 
       await this.prisma.outboxEvent.updateMany({
         where: {
@@ -142,14 +144,15 @@ export class OutboxPublisherService
         },
       });
       this.metrics.recordOutboxPublishFailure();
-      this.logger.error({
-        event: 'OUTBOX_PUBLISH_FAILED',
-        eventId: event.eventId,
-        eventType: event.eventType,
-        correlationId: event.correlationId,
-        attempt,
-        error: message,
-      });
+      this.logger.error(
+        structuredLog('OUTBOX_PUBLISH_FAILED', {
+          eventId: event.eventId,
+          eventType: event.eventType,
+          correlationId: event.correlationId,
+          attempt,
+          error: message,
+        }),
+      );
     }
   }
 
@@ -158,9 +161,5 @@ export class OutboxPublisherService
       where: { publishedAt: null },
     });
     this.metrics.setOutboxBacklog(count);
-  }
-
-  private errorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : 'Unknown error';
   }
 }
