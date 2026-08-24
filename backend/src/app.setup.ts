@@ -91,7 +91,10 @@ export function configureApp(app: INestApplication): void {
       'Admin dispute review and explicit status transitions',
     )
     .addTag('seller-dashboard', 'Seller-scoped snapshot and ledger analytics')
-    .addTag('admin-analytics', 'Marketplace analytics and escaped CSV export')
+    .addTag(
+      'admin-analytics',
+      'Marketplace analytics and streaming CSV/JSON exports',
+    )
     .build();
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);

@@ -117,32 +117,7 @@ describe('AdminAnalyticsService', () => {
   });
 
   it('streams stable CSV headers and correctly escaped snapshots', async () => {
-    prisma.orderItem.findMany
-      .mockResolvedValueOnce([
-        {
-          id: 'item-id',
-          productId: 'product-id',
-          productTitle: 'Widget, "Pro"\nEdition',
-          sellerIdSnapshot: 'seller-id',
-          sellerNameSnapshot: 'Store, Inc.',
-          unitPrice: new Prisma.Decimal('10.00'),
-          quantity: 2,
-          lineTotal: new Prisma.Decimal('20.00'),
-          cancelledQuantity: 0,
-          refundedQuantity: 1,
-          refundedAmount: new Prisma.Decimal('10.00'),
-          sellerOrder: {
-            id: 'seller-order-id',
-            status: 'COMPLETED',
-            currency: 'USD',
-            order: {
-              id: 'order-id',
-              createdAt: new Date('2026-08-10T12:00:00.000Z'),
-            },
-          },
-        },
-      ])
-      .mockResolvedValueOnce([]);
+    prisma.orderItem.findMany.mockResolvedValueOnce([salesItem()]);
 
     const output = service.createSalesCsv({
       from: '2026-08-01T00:00:00.000Z',
@@ -161,7 +136,78 @@ describe('AdminAnalyticsService', () => {
       expect.objectContaining({ take: 500, orderBy: { id: 'asc' } }),
     );
   });
+
+  it('streams JSON with the same stable sales snapshot fields', async () => {
+    prisma.orderItem.findMany.mockResolvedValueOnce([salesItem()]);
+
+    const output = service.createSalesJson({
+      from: '2026-08-01T00:00:00.000Z',
+      to: '2026-08-21T00:00:00.000Z',
+    });
+    let json = '';
+    for await (const chunk of output.stream) {
+      json += Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
+    }
+    const parsed = JSON.parse(json) as {
+      range: { from: string; to: string };
+      items: Array<Record<string, string | number>>;
+    };
+
+    expect(output.filename).toBe(
+      'marketplace-sales-2026-08-01-2026-08-21.json',
+    );
+    expect(parsed.range).toEqual({
+      from: '2026-08-01T00:00:00.000Z',
+      to: '2026-08-21T00:00:00.000Z',
+    });
+    expect(parsed.items).toEqual([
+      {
+        orderId: 'order-id',
+        sellerOrderId: 'seller-order-id',
+        orderCreatedAt: '2026-08-10T12:00:00.000Z',
+        sellerOrderStatus: 'COMPLETED',
+        sellerId: 'seller-id',
+        sellerNameSnapshot: 'Store, Inc.',
+        productId: 'product-id',
+        productTitleSnapshot: 'Widget, "Pro"\nEdition',
+        unitPrice: '10.00',
+        quantity: 2,
+        lineTotal: '20.00',
+        cancelledQuantity: 0,
+        refundedQuantity: 1,
+        refundedAmount: '10.00',
+        netQuantity: 1,
+        netSales: '10.00',
+        currency: 'USD',
+      },
+    ]);
+  });
 });
+
+function salesItem() {
+  return {
+    id: 'item-id',
+    productId: 'product-id',
+    productTitle: 'Widget, "Pro"\nEdition',
+    sellerIdSnapshot: 'seller-id',
+    sellerNameSnapshot: 'Store, Inc.',
+    unitPrice: new Prisma.Decimal('10.00'),
+    quantity: 2,
+    lineTotal: new Prisma.Decimal('20.00'),
+    cancelledQuantity: 0,
+    refundedQuantity: 1,
+    refundedAmount: new Prisma.Decimal('10.00'),
+    sellerOrder: {
+      id: 'seller-order-id',
+      status: 'COMPLETED',
+      currency: 'USD',
+      order: {
+        id: 'order-id',
+        createdAt: new Date('2026-08-10T12:00:00.000Z'),
+      },
+    },
+  };
+}
 
 function ledger(
   account: LedgerAccount,

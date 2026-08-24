@@ -13,7 +13,7 @@ export function AdminAnalyticsPage() {
   const [query, setQuery] = useState(range);
   const [data, setData] = useState<AdminAnalytics | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"csv" | "json" | null>(null);
   useEffect(() => {
     const controller = new AbortController();
     void adminApi
@@ -33,11 +33,13 @@ export function AdminAnalyticsPage() {
     setError(null);
     setQuery({ ...range });
   }
-  async function download() {
-    setExporting(true);
+  async function download(format: "csv" | "json") {
+    setExporting(format);
     setError(null);
     try {
-      const file = await adminApi.salesCsv(query.from, query.to);
+      const file = await (format === "csv"
+        ? adminApi.salesCsv(query.from, query.to)
+        : adminApi.salesJson(query.from, query.to));
       const url = URL.createObjectURL(file.blob);
       const anchor = document.createElement("a");
       anchor.href = url;
@@ -47,7 +49,7 @@ export function AdminAnalyticsPage() {
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   }
   if (!data && !error)
@@ -84,10 +86,18 @@ export function AdminAnalyticsPage() {
           <button
             type="button"
             className="button button-primary"
-            disabled={exporting}
-            onClick={() => void download()}
+            disabled={exporting !== null}
+            onClick={() => void download("csv")}
           >
-            {exporting ? "Exporting..." : "Export CSV"}
+            {exporting === "csv" ? "Exporting..." : "Export CSV"}
+          </button>
+          <button
+            type="button"
+            className="button button-secondary"
+            disabled={exporting !== null}
+            onClick={() => void download("json")}
+          >
+            {exporting === "json" ? "Exporting..." : "Export JSON"}
           </button>
         </form>
       </header>

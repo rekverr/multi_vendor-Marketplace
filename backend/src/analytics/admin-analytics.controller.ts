@@ -42,4 +42,15 @@ export class AdminAnalyticsController {
       disposition: `attachment; filename="${exportFile.filename}"`,
     });
   }
+
+  @Get('sales.json')
+  @ApiProduces('application/json')
+  @ApiOperation({ summary: 'Export marketplace sales snapshots as JSON' })
+  exportSalesJson(@Query() query: SellerDashboardQueryDto) {
+    const exportFile = this.analytics.createSalesJson(query);
+    return new StreamableFile(exportFile.stream, {
+      type: 'application/json; charset=utf-8',
+      disposition: `attachment; filename="${exportFile.filename}"`,
+    });
+  }
 }

@@ -16,7 +16,7 @@ The project is a modular monolith. PostgreSQL is the source of truth; Redis, Mei
 - Cancellation, item-level partial refunds, commission and auditable ledger adjustments.
 - Auction configuration, race-safe bidding, finalization and winner purchase window.
 - Customer/Seller disputes and Admin resolution workflow.
-- Seller and Admin analytics plus CSV sales export.
+- Seller and Admin analytics plus streaming CSV/JSON sales exports.
 - Transactional Outbox, BullMQ workers, Meilisearch projection, Redis cache and Socket.IO updates.
 - Swagger, structured logs, correlation IDs, health checks, Prometheus metrics, Storybook, E2E concurrency tests and k6 load testing.
 

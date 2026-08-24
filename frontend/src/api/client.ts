@@ -79,7 +79,10 @@ export async function apiDownload(
   path: string,
   retryAfterRefresh = true,
 ): Promise<{ blob: Blob; filename: string }> {
-  const headers = new Headers({ Accept: "text/csv" });
+  const isJson = path.includes(".json");
+  const headers = new Headers({
+    Accept: isJson ? "application/json" : "text/csv",
+  });
   const accessToken = authBridge?.getAccessToken();
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
   const response = await fetch(apiUrl(path), {
@@ -96,7 +99,8 @@ export async function apiDownload(
   if (!response.ok) throw await toApiError(response);
   const disposition = response.headers.get("Content-Disposition") ?? "";
   const filename =
-    disposition.match(/filename="?([^";]+)"?/i)?.[1] ?? "marketplace-sales.csv";
+    disposition.match(/filename="?([^";]+)"?/i)?.[1] ??
+    `marketplace-sales.${isJson ? "json" : "csv"}`;
   return { blob: await response.blob(), filename };
 }
 

@@ -126,4 +126,7 @@ export const adminApi = {
   salesCsv(from?: string, to?: string) {
     return apiDownload(`/admin/analytics/sales.csv?${rangeQuery(from, to)}`);
   },
+  salesJson(from?: string, to?: string) {
+    return apiDownload(`/admin/analytics/sales.json?${rangeQuery(from, to)}`);
+  },
 };

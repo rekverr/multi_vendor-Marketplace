@@ -12,7 +12,47 @@ import { SellerDashboardQueryDto } from './dto/seller-dashboard-query.dto.js';
 
 const DEFAULT_RANGE_MS = 30 * 24 * 60 * 60 * 1000;
 const MAX_RANGE_MS = 366 * 24 * 60 * 60 * 1000;
-const CSV_BATCH_SIZE = 500;
+const EXPORT_BATCH_SIZE = 500;
+
+interface SalesExportRow {
+  orderId: string;
+  sellerOrderId: string;
+  orderCreatedAt: string;
+  sellerOrderStatus: string;
+  sellerId: string;
+  sellerNameSnapshot: string;
+  productId: string;
+  productTitleSnapshot: string;
+  unitPrice: string;
+  quantity: number;
+  lineTotal: string;
+  cancelledQuantity: number;
+  refundedQuantity: number;
+  refundedAmount: string;
+  netQuantity: number;
+  netSales: string;
+  currency: string;
+}
+
+const SALES_EXPORT_FIELDS = [
+  'orderId',
+  'sellerOrderId',
+  'orderCreatedAt',
+  'sellerOrderStatus',
+  'sellerId',
+  'sellerNameSnapshot',
+  'productId',
+  'productTitleSnapshot',
+  'unitPrice',
+  'quantity',
+  'lineTotal',
+  'cancelledQuantity',
+  'refundedQuantity',
+  'refundedAmount',
+  'netQuantity',
+  'netSales',
+  'currency',
+] as const satisfies ReadonlyArray<keyof SalesExportRow>;
 
 interface NetSalesRow {
   currency: string;
@@ -145,26 +185,33 @@ export class AdminAnalyticsService {
     return { filename, stream: Readable.from(this.salesCsv(range)) };
   }
 
+  createSalesJson(query: SellerDashboardQueryDto) {
+    const range = this.resolveRange(query);
+    const filename = `marketplace-sales-${range.from.toISOString().slice(0, 10)}-${range.to.toISOString().slice(0, 10)}.json`;
+    return { filename, stream: Readable.from(this.salesJson(range)) };
+  }
+
   private async *salesCsv(range: { from: Date; to: Date }) {
-    yield csvRow([
-      'orderId',
-      'sellerOrderId',
-      'orderCreatedAt',
-      'sellerOrderStatus',
-      'sellerId',
-      'sellerNameSnapshot',
-      'productId',
-      'productTitleSnapshot',
-      'unitPrice',
-      'quantity',
-      'lineTotal',
-      'cancelledQuantity',
-      'refundedQuantity',
-      'refundedAmount',
-      'netQuantity',
-      'netSales',
-      'currency',
-    ]);
+    yield csvRow([...SALES_EXPORT_FIELDS]);
+    for await (const row of this.salesRows(range)) {
+      yield csvRow(SALES_EXPORT_FIELDS.map((field) => row[field]));
+    }
+  }
+
+  private async *salesJson(range: { from: Date; to: Date }) {
+    yield `{"range":${JSON.stringify(this.rangeResponse(range))},"items":[`;
+    let first = true;
+    for await (const row of this.salesRows(range)) {
+      yield `${first ? '' : ','}${JSON.stringify(row)}`;
+      first = false;
+    }
+    yield ']}\n';
+  }
+
+  private async *salesRows(range: {
+    from: Date;
+    to: Date;
+  }): AsyncGenerator<SalesExportRow> {
     let cursor: string | undefined;
     for (;;) {
       const items = await this.prisma.orderItem.findMany({
@@ -196,7 +243,7 @@ export class AdminAnalyticsService {
           },
         },
         orderBy: { id: 'asc' },
-        take: CSV_BATCH_SIZE,
+        take: EXPORT_BATCH_SIZE,
       });
       if (items.length === 0) return;
       for (const item of items) {
@@ -210,28 +257,28 @@ export class AdminAnalyticsService {
             .sub(item.refundedAmount),
           0,
         );
-        yield csvRow([
-          item.sellerOrder.order.id,
-          item.sellerOrder.id,
-          item.sellerOrder.order.createdAt.toISOString(),
-          item.sellerOrder.status,
-          item.sellerIdSnapshot,
-          item.sellerNameSnapshot,
-          item.productId,
-          item.productTitle,
-          item.unitPrice.toFixed(2),
-          item.quantity,
-          item.lineTotal.toFixed(2),
-          item.cancelledQuantity,
-          item.refundedQuantity,
-          item.refundedAmount.toFixed(2),
+        yield {
+          orderId: item.sellerOrder.order.id,
+          sellerOrderId: item.sellerOrder.id,
+          orderCreatedAt: item.sellerOrder.order.createdAt.toISOString(),
+          sellerOrderStatus: item.sellerOrder.status,
+          sellerId: item.sellerIdSnapshot,
+          sellerNameSnapshot: item.sellerNameSnapshot,
+          productId: item.productId,
+          productTitleSnapshot: item.productTitle,
+          unitPrice: item.unitPrice.toFixed(2),
+          quantity: item.quantity,
+          lineTotal: item.lineTotal.toFixed(2),
+          cancelledQuantity: item.cancelledQuantity,
+          refundedQuantity: item.refundedQuantity,
+          refundedAmount: item.refundedAmount.toFixed(2),
           netQuantity,
-          netSales.toFixed(2),
-          item.sellerOrder.currency,
-        ]);
+          netSales: netSales.toFixed(2),
+          currency: item.sellerOrder.currency,
+        };
       }
       cursor = items.at(-1)!.id;
-      if (items.length < CSV_BATCH_SIZE) return;
+      if (items.length < EXPORT_BATCH_SIZE) return;
     }
   }
 
