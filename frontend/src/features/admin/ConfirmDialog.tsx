@@ -6,6 +6,7 @@ export function ConfirmDialog({
   children,
   onConfirm,
   requireText,
+  defaultOpen = false,
 }: {
   title: string;
   description: string;
@@ -13,8 +14,9 @@ export function ConfirmDialog({
   children: ReactNode;
   onConfirm: (text: string) => Promise<void>;
   requireText?: boolean;
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState(false);

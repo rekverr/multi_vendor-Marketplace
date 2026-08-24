@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { errorMessage } from "../../api/api-error";
+import { Button } from "../../components/Button";
+import { FormField } from "../../components/FormField";
 
 interface AuthFormProps {
   mode: "login" | "register";
@@ -34,42 +36,32 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
           {error}
         </div>
       )}
-      <label>
-        Email
-        <input
-          autoComplete="email"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-        />
-      </label>
-      <label>
-        Password
-        <input
-          autoComplete={isRegistration ? "new-password" : "current-password"}
-          type="password"
-          minLength={isRegistration ? 12 : 1}
-          maxLength={128}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-        />
-        {isRegistration && (
-          <span className="field-hint">Use at least 12 characters.</span>
-        )}
-      </label>
-      <button
-        className="button button-primary"
-        disabled={submitting}
-        type="submit"
-      >
+      <FormField
+        label="Email"
+        autoComplete="email"
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        required
+      />
+      <FormField
+        label="Password"
+        hint={isRegistration ? "Use at least 12 characters." : undefined}
+        autoComplete={isRegistration ? "new-password" : "current-password"}
+        type="password"
+        minLength={isRegistration ? 12 : 1}
+        maxLength={128}
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        required
+      />
+      <Button loading={submitting} type="submit">
         {submitting
-          ? "Please wait..."
+          ? "Signing in"
           : isRegistration
             ? "Create account"
             : "Sign in"}
-      </button>
+      </Button>
       <p className="form-switch">
         {isRegistration ? "Already registered?" : "New to Marketline?"}{" "}
         <Link to={isRegistration ? "/login" : "/register"}>
