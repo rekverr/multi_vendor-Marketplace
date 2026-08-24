@@ -88,6 +88,20 @@ describe('JWT access and Google OAuth2 (e2e)', () => {
       .expect(401);
   });
 
+  it('does not expose OAuth query secrets in error responses', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/auth/google/callback')
+      .query({
+        code: 'sensitive-one-time-authorization-code',
+        state: 'invalid-oauth-state-value-000000000000',
+      })
+      .expect(401);
+
+    expect(bodyOf<{ path: string }>(response).path).toBe(
+      '/auth/google/callback',
+    );
+  });
+
   it('creates a new Customer from a provider-verified Google identity', async () => {
     googleClient.setIdentity('new-user-code', {
       providerAccountId: 'google-sub-new-user',

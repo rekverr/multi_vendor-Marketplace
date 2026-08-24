@@ -30,7 +30,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
     if (
-      request.url.startsWith('/health') &&
+      request.path.startsWith('/health') &&
       exception instanceof HttpException
     ) {
       response.status(status).json(exception.getResponse());
@@ -64,7 +64,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       code,
       message,
       ...(details ? { details } : {}),
-      path: request.url,
+      path: request.path,
       timestamp: new Date().toISOString(),
       correlationId: request.correlationId,
     });
