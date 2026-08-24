@@ -4,6 +4,7 @@ import { PageLoader } from "../../components/PageLoader";
 import type { CartItem } from "../../entities/cart/cart.types";
 import { formatMoney } from "../../lib/format";
 import { useCart } from "./CartContext";
+import { CheckoutSummary } from "./CheckoutSummary";
 import { CheckoutSuccess } from "./CheckoutSuccess";
 
 export function CartPage() {
@@ -97,41 +98,15 @@ export function CartPage() {
             </article>
           ))}
         </section>
-        <aside className="cart-summary">
-          <span className="eyebrow">Server summary</span>
-          <div>
-            <span>Items</span>
-            <strong>{cart.itemCount}</strong>
-          </div>
-          <div className="summary-total">
-            <span>Current subtotal</span>
-            <strong>
-              {cart.pending ? "Syncing..." : formatMoney(cart.subtotal)}
-            </strong>
-          </div>
-          <p>
-            Cart stock is not reserved. Product availability and all prices are
-            revalidated inside checkout.
-          </p>
-          <button
-            className="button button-primary"
-            disabled={
-              cartState.mutating || (!canCheckout && !cartState.checkoutAttempt)
-            }
-            onClick={() => void cartState.checkout()}
-          >
-            {cartState.mutating
-              ? "Processing..."
-              : cartState.checkoutAttempt
-                ? "Retry checkout safely"
-                : "Checkout"}
-          </button>
-          {cartState.checkoutAttempt && (
-            <small>
-              A previous checkout identity is preserved for a safe retry.
-            </small>
-          )}
-        </aside>
+        <CheckoutSummary
+          itemCount={cart.itemCount}
+          subtotal={cart.subtotal}
+          pending={Boolean(cart.pending)}
+          mutating={cartState.mutating}
+          canCheckout={canCheckout}
+          retrying={Boolean(cartState.checkoutAttempt)}
+          onCheckout={() => void cartState.checkout()}
+        />
       </div>
     </main>
   );
